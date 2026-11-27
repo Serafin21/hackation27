@@ -113,7 +113,7 @@ body{background:var(--deep);color:#fff;font:16px/1.4 'Open Sans',system-ui,-appl
 .map{position:relative;background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden}
 .map svg{display:block;width:100%;height:auto}
 #mapSvg #world{transform-origin:0 0;transition:transform .7s cubic-bezier(.3,.8,.3,1)}
-#mapSvg.z #world{transform:translate(-550.2px,-227px) scale(2.6)}
+#mapSvg.z #world{transform:var(--zt)}
 .ml{paint-order:stroke;stroke:#fff;stroke-width:3px;stroke-linejoin:round;font-family:'Open Sans',sans-serif;font-weight:600}
 #lblFar{transition:opacity .25s}
 #mapSvg.z #lblFar{opacity:0}
@@ -253,7 +253,22 @@ body{background:var(--deep);color:#fff;font:16px/1.4 'Open Sans',system-ui,-appl
 #postOk .cmp{margin-top:14px;text-align:left}
 
 /* ===== tryb interaktywny (demo na telefon) ===== */
+#camV{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none;background:#000}
+#l-cam.live #camV{display:block}
+#l-cam.live #camSvg{display:none}
+.camalt{position:absolute;left:50%;transform:translateX(-50%);bottom:262px;background:rgba(0,0,0,.55);color:#fff;border:0;border-radius:18px;padding:8px 14px;font:700 13px 'Open Sans',sans-serif;cursor:pointer;white-space:nowrap}
+.ph img{display:block;width:100%;height:100%;object-fit:cover}
+.bh{fill:transparent;cursor:pointer}
+.det{opacity:0;transition:opacity .35s;pointer-events:none}
+#mapSvg.z .det.on{opacity:1;transition-delay:.4s}
+.det rect{fill:#fff;stroke:#9AA3AE;stroke-width:.35}
+.det text{font:700 3.6px 'Open Sans',sans-serif;fill:#3C4043;paint-order:stroke;stroke:#fff;stroke-width:.9px;stroke-linejoin:round}
+.det path{fill:none;stroke:#4B79B5;stroke-width:.8;stroke-linecap:round}
+.bsel{fill:#C6D6EE!important;stroke:#7E9CC9!important}
+.mzoom span{cursor:pointer}
+
 #stage{position:relative;inset:auto;background:none}
+#app,#stage,#phoneWrap,#phone,#screen{overflow:clip}
 #stage::before{display:none}
 body{overflow:hidden;touch-action:manipulation}
 #app{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at 1px 1px,rgba(255,255,255,.08) 1.2px,transparent 1.6px) 0 0/24px 24px,linear-gradient(155deg,#123764 0%,#04243E 62%)}
@@ -292,10 +307,10 @@ body{overflow:hidden;touch-action:manipulation}
 
       <!-- camera: first screen of the app -->
       <div class="layer" id="l-cam">
-        <svg id="camSvg" viewBox="0 0 382 812" preserveAspectRatio="none"></svg>
+        <svg id="camSvg" viewBox="0 0 382 812" preserveAspectRatio="none"></svg><video id="camV" playsinline muted autoplay></video><input type="file" id="camFile" accept="image/*" capture="environment" hidden>
         <div class="camhint">Zrób zdjęcie problemu</div>
         <div class="focus" id="focus"><b class="a"></b><b class="b"></b><b class="c"></b><b class="d"></b></div>
-        <div class="cambar"><div class="shutter" id="shutter"></div><span>Zrób zdjęcie</span></div>
+        <button class="camalt" id="camAlt">Użyj zdjęcia przykładowego</button><div class="cambar"><div class="shutter" id="shutter"></div><span id="camLbl">Zrób zdjęcie</span></div>
         <div class="flash" id="flash"></div>
       </div>
 
@@ -304,7 +319,7 @@ body{overflow:hidden;touch-action:manipulation}
         <div class="hdr"><div><h3>Nowe zgłoszenie</h3><p>Wybierz opcje – bez pisania</p></div></div>
         <div class="fb">
           <div class="who">
-            <div class="ph"><svg id="thumbSvg" viewBox="101 340 180 180"></svg><span class="phok"><svg width="13" height="13" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7" fill="none" stroke="#04243E" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span></div>
+            <div class="ph"><svg id="thumbSvg" viewBox="101 340 180 180"></svg><img id="thumbImg" alt="Twoje zdjęcie" hidden><span class="phok"><svg width="13" height="13" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7" fill="none" stroke="#04243E" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span></div>
             <div><div class="lab">Zgłaszający</div><div class="ro"><span>Jan Kowalski · Zmiana B</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#98A2B3" stroke-width="2.4" style="flex:none"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></div><div class="okt">✓ Zdjęcie dodane</div></div>
           </div>
           <div>
@@ -333,12 +348,12 @@ body{overflow:hidden;touch-action:manipulation}
                   <text x="200" y="12" font-size="8" transform="rotate(-1.4 200 12)">Przemysłowa</text>
                   <text x="170" y="167" font-size="9" font-style="italic" fill="#4C88C9">Warta</text>
                 </g>
-                <circle id="xT" cx="296" cy="108" r="2.4" fill="#fff" fill-opacity="0"/>
+                <g id="bldHits"></g><g id="dets"></g><circle id="xT" cx="296" cy="108" r="2.4" fill="#fff" fill-opacity="0"/>
               </g>
-              <g id="lblNear" class="ml" fill="#5F6368" font-size="11" text-anchor="middle"><text x="125" y="112">Sprężarkownia</text><text x="170" y="166" font-size="10">Zbiorniki</text></g>
+              <g id="lblNear" class="ml" fill="#1E3E72" font-size="11" text-anchor="middle"><text id="nearT" x="170" y="15"></text></g>
               <circle id="ring" cx="219.4" cy="53.8" r="7" fill="none" stroke="#EA4335" stroke-width="3" opacity="0" style="transform-box:fill-box;transform-origin:center"/>
               <g id="pin" opacity="0"><ellipse cx="0" cy="2" rx="5" ry="2" fill="#000" opacity=".25"/><path d="M0-30c-9 0-15 6-15 14C-15-5 0 2 0 2S15-5 15-16C15-24 9-30 0-30z" fill="#EA4335" stroke="#C5221F" stroke-width="1"/><circle cx="0" cy="-16" r="5" fill="#A50E0E"/></g>
-            </svg><div class="mzoom"><span>+</span><span>−</span></div><div class="mscale"><i></i><span id="mScale">50 m</span></div></div>
+            </svg><div class="mzoom"><span id="zIn">+</span><span id="zOut">−</span></div><div class="mscale"><i></i><span id="mScale">50 m</span></div></div>
           </div>
           <div><div class="lab">Kategoria</div><div class="chips">
             <span class="chip" id="c-wyciek">Wyciek powietrza</span><span class="chip">Bieg jałowy</span><span class="chip">Oświetlenie</span>
@@ -349,7 +364,7 @@ body{overflow:hidden;touch-action:manipulation}
         </div>
         <div class="okov" id="formOk">
           <svg class="ck" width="92" height="92" viewBox="0 0 92 92"><circle cx="46" cy="46" r="46"/><path d="M27 47l13 13 25-27"/></svg>
-          <h4>Zgłoszenie #147 przyjęte</h4>
+          <h4>Zgłoszenie #<span class="rno">147</span> przyjęte</h4>
           <p>Utrzymanie ruchu dostało powiadomienie z mapą i zdjęciem.</p>
         </div>
       </div>
@@ -365,7 +380,7 @@ body{overflow:hidden;touch-action:manipulation}
             <circle class="grain" cx="55" cy="74" r="2.4" fill="#82C63F"/>
           </svg>
           <h4>UR pracuje…</h4>
-          <p>Zgłoszenie #147 · Sprężarkownia</p>
+          <p>Zgłoszenie #<span class="rno">147</span> · <span id="wZone">Sprężarkownia</span></p>
         </div>
         <div class="wb" id="w2">
           <svg class="ck ck2" width="128" height="128" viewBox="0 0 92 92"><circle cx="46" cy="46" r="46"/><path d="M27 47l13 13 25-27"/></svg>
@@ -432,7 +447,7 @@ body{overflow:hidden;touch-action:manipulation}
       </div>
 
       <nav class="gnav" id="gnav" data-a="0"><i class="hl"></i></nav>
-      <div id="push"><div class="pi"><svg width="24" height="24" viewBox="0 0 50 50"><path d="M29 4 11 28h11l-4 18 21-27H27z" fill="#82C63F"/></svg></div><div><small>EnergoPatrol · teraz</small><strong>Zgłoszenie #147 naprawione ✓</strong><span>Zobacz, ile zaoszczędziłeś</span></div></div>
+      <div id="push"><div class="pi"><svg width="24" height="24" viewBox="0 0 50 50"><path d="M29 4 11 28h11l-4 18 21-27H27z" fill="#82C63F"/></svg></div><div><small>EnergoPatrol · teraz</small><strong>Zgłoszenie #<span class="rno">147</span> naprawione ✓</strong><span>Zobacz, ile zaoszczędziłeś</span></div></div>
     </div></div></div></div></div>
 <button class="reset" id="resetBtn">↺ Od nowa</button>
 <div class="links"><a href="panel.html#telebim">Telebim</a><a href="panel.html#symulator">Symulator KPI</a></div>
@@ -560,49 +575,118 @@ function checkRow(i){const k=gainOf(i),row=$('#r'+i);row.classList.add('ck');
 /* ---------- stan zgłoszenia ---------- */
 const KW={'Wyciek powietrza':[1.1,4.3,17.2],'Bieg jałowy':[5,15,30],'Oświetlenie':[0.4,1.2,3],'Izolacja':[2,6,15]};
 const HRS={'Wyciek powietrza':8000,'Bieg jałowy':2000,'Oświetlenie':4000,'Izolacja':8000};
+/* godziny pracy straty w pierwszym tygodniu po naprawie (szacunek): wyciek i izolacja całą dobę, napędy i światło tylko w czasie pracy */
+const WKH={'Wyciek powietrza':168,'Bieg jałowy':40,'Oświetlenie':80,'Izolacja':168};
 const SIZES={'Wyciek powietrza':[['Mały','do 1 mm'],['Średni','ok. 3 mm'],['Duży','od 5 mm']],'Bieg jałowy':[['Mały','napęd do 5 kW'],['Średni','ok. 15 kW'],['Duży','od 30 kW']],
   'Oświetlenie':[['Kilka lamp',''],['Rząd lamp',''],['Cała hala','']],'Izolacja':[['Mały','ubytek'],['Średni','ubytek'],['Duży','ubytek']]};
 let R={zoom:false,pin:false,cat:null,size:null,sent:false};
 function ensureAudio(){try{if(!actx)actx=new (window.AudioContext||window.webkitAudioContext)();if(actx.state==='suspended')actx.resume()}catch(e){actx=null}}
-function est(){ if(!R.cat||!KW[R.cat]||R.size==null) return null; const kw=KW[R.cat][R.size], h=HRS[R.cat]; return {kw, yr:kw*h*0.8/1000, wk:kw*24*7}; }
+function est(){ if(!R.cat||!KW[R.cat]||R.size==null) return null; const kw=KW[R.cat][R.size], h=HRS[R.cat]; return {kw, yr:kw*h*0.8/1000, wk:kw*WKH[R.cat]}; }
 function updSend(){ const needSize=!!KW[R.cat]; const ok=R.pin&&R.cat&&(!needSize||R.size!=null); $('#send').disabled=!ok;
-  $('#fnote').textContent=!R.zoom?'Stuknij budynek na mapie':!R.pin?'Stuknij dokładne miejsce':!R.cat?'Wybierz kategorię':(needSize&&R.size==null)?'Wybierz wielkość':'Gotowe – wyślij zgłoszenie'; }
+  $('#fnote').textContent=!R.zoom?'Stuknij budynek na mapie (każdy działa)':!R.pin?'Stuknij dokładne miejsce':!R.cat?'Wybierz kategorię':(needSize&&R.size==null)?'Wybierz wielkość':'Gotowe – wyślij zgłoszenie'; }
 function renderSizes(){ const box=$('#sizeBox'); const sz=SIZES[R.cat];
   if(!sz){ off('#sizeBox'); return; }
   box.querySelector('.lab').textContent=R.cat==='Wyciek powietrza'?'Wielkość wycieku':'Wielkość';
   box.querySelector('.szg').innerHTML=sz.map((s,i)=>`<span class="chip sz${R.size===i?' sel':''}" data-sz="${i}"><b>${s[0]}</b>${s[1]?`<small>${s[1]}</small>`:''}</span>`).join('');
   on('#sizeBox'); }
 
+
+/* ---------- budynki na mapie (współrzędne mapy) ---------- */
+const BLD=[
+ {id:'piec',name:'Piec obrotowy',box:[14,31,102,40],det:'<rect x="96" y="36" width="20" height="18" rx="1"/><text x="106" y="47" text-anchor="middle">wymiennik</text><text x="24" y="56">palnik</text><text x="62" y="75" text-anchor="middle">chłodnik klinkieru</text>'},
+ {id:'silo',name:'Silosy',box:[136,40,68,24],det:'<text x="148" y="53.3" text-anchor="middle">S1</text><text x="170" y="53.3" text-anchor="middle">S2</text><text x="192" y="53.3" text-anchor="middle">S3</text><text x="170" y="38" text-anchor="middle">transport pneumatyczny</text>'},
+ {id:'mlcem',name:'Młyny cementu',box:[236,32,92,42],det:'<rect x="244" y="40" width="34" height="24" rx="1"/><rect x="284" y="40" width="34" height="24" rx="1"/><text x="261" y="53" text-anchor="middle">Młyn 1</text><text x="301" y="53" text-anchor="middle">Młyn 2</text><text x="281" y="70" text-anchor="middle">wentylator odpylania</text>'},
+ {id:'pak',name:'Pakownia',box:[14,98,96,42],det:'<rect x="22" y="106" width="30" height="14" rx="1"/><text x="37" y="114.3" text-anchor="middle">pakowarka</text><rect x="58" y="124" width="44" height="10" rx="1"/><text x="80" y="130.3" text-anchor="middle">rampa załadunku</text>'},
+ {id:'wars',name:'Warsztat',box:[132,100,84,36],det:'<rect x="140" y="107" width="30" height="20" rx="1"/><text x="155" y="118.3" text-anchor="middle">mechaniczny</text><rect x="176" y="107" width="32" height="20" rx="1"/><text x="192" y="118.3" text-anchor="middle">magazyn części</text>'},
+ {id:'spr',name:'Sprężarkownia',box:[240,98,86,56],det:'<rect x="248" y="106" width="16" height="11" rx="1"/><text x="256" y="112.6" text-anchor="middle">S1</text><rect x="248" y="123" width="16" height="11" rx="1"/><text x="256" y="129.6" text-anchor="middle">S2</text><path d="M264 111.5h12v17h-12M276 120h30"/><text x="318" y="106" text-anchor="middle">osuszacz</text><text x="258" y="141" text-anchor="middle">zbiorniki</text>'}];
+let photoURL=null, camStream=null, repNo=147;
+function buildMap(){ $('#bldHits').innerHTML=BLD.map(b=>`<rect class="bh" data-b="${b.id}" x="${b.box[0]}" y="${b.box[1]}" width="${b.box[2]}" height="${b.box[3]}" rx="3"/>`).join('');
+  $('#dets').innerHTML=BLD.map(b=>`<g class="det" id="d-${b.id}">${b.det}</g>`).join(''); }
+function svgPt(e){ const svg=$('#mapSvg'), p=svg.createSVGPoint(); p.x=e.clientX; p.y=e.clientY; return p.matrixTransform(svg.getScreenCTM().inverse()); }
+let ZT={k:1,x:0,y:0};
+function zoomTo(b){ const k=2.6, cx=b.box[0]+b.box[2]/2, cy=b.box[1]+b.box[3]/2;
+  let x=170-k*cx, y=85-k*cy; x=Math.min(0,Math.max(340-k*340,x)); y=Math.min(0,Math.max(170-k*170,y)); ZT={k,x,y};
+  $('#mapSvg').style.setProperty('--zt',`translate(${x}px,${y}px) scale(${k})`);
+  stage.querySelectorAll('.det').forEach(d=>d.classList.remove('on')); $('#d-'+b.id).classList.add('on');
+  $('#nearT').textContent=b.name; R.zoom=true; R.zone=b.name; R.pin=false; $('#pin').setAttribute('opacity','0');
+  $('#mapSvg').classList.add('z'); $('#mScale').textContent='20 m';
+  const h=$('#hint'); h.classList.remove('ok'); h.textContent='Stuknij dokładne miejsce'; beep(600,.06,'sine',.04); }
+function zoomOut(){ $('#mapSvg').classList.remove('z'); R.zoom=false; R.pin=false; R.zone=null; $('#pin').setAttribute('opacity','0');
+  $('#mScale').textContent='50 m'; const h=$('#hint'); h.classList.remove('ok'); h.textContent='Stuknij budynek, aby przybliżyć'; updSend(); }
+function pinAt(sx,sy){ const p=$('#pin'); p.getAnimations().forEach(a=>a.cancel()); p.setAttribute('opacity','1');
+  p.animate([{transform:`translate(${sx}px,${sy-46}px)`},{transform:`translate(${sx}px,${sy}px)`,offset:.72},{transform:`translate(${sx}px,${sy-6}px)`,offset:.86},{transform:`translate(${sx}px,${sy}px)`}],{duration:520,easing:'ease-in',fill:'forwards'});
+  const r=$('#ring'); r.setAttribute('cx',sx); r.setAttribute('cy',sy); r.animate([{opacity:.9,transform:'scale(1)'},{opacity:0,transform:'scale(3)'}],{duration:800,delay:450,iterations:2,easing:'ease-out',fill:'forwards'});
+  R.pin=true; const h=$('#hint'); h.textContent='✓ '+R.zone; h.classList.add('ok'); beep(740,.08,'sine',.05); }
+function mapClick(e){ const p=svgPt(e);
+  if(!R.zoom){ const b=BLD.find(b=>p.x>=b.box[0]-3&&p.x<=b.box[0]+b.box[2]+3&&p.y>=b.box[1]-3&&p.y<=b.box[1]+b.box[3]+3);
+    if(b){ zoomTo(b); } else { const h=$('#hint'); h.textContent='Stuknij budynek na mapie'; h.animate([{transform:'translateX(-4px)'},{transform:'translateX(4px)'},{transform:'none'}],{duration:250}); } }
+  else { pinAt(p.x,p.y); }
+  updSend(); }
+
+/* ---------- aparat: podgląd na żywo, zdjęcie z galerii albo przykładowe ---------- */
+async function startCam(){ const L=$('#l-cam'); L.classList.remove('live'); $('#camLbl').textContent='Zrób zdjęcie';
+  if(!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia)) { $('#camLbl').textContent='Stuknij, aby wybrać zdjęcie'; return; }
+  try{ camStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:1280}},audio:false});
+    if(!$('#l-cam').classList.contains('on')){ stopCam(); return; }
+    const v=$('#camV'); v.srcObject=camStream; await v.play().catch(()=>{}); L.classList.add('live');
+  }catch(err){ camStream=null; $('#camLbl').textContent='Stuknij, aby wybrać zdjęcie'; } }
+function stopCam(){ if(camStream){ camStream.getTracks().forEach(tr=>tr.stop()); camStream=null; } const v=$('#camV'); if(v) v.srcObject=null; $('#l-cam').classList.remove('live'); }
+function grab(){ const v=$('#camV'); const w=v.videoWidth,h=v.videoHeight; if(!w) return null; const sq=Math.min(w,h), c=document.createElement('canvas'); c.width=c.height=480;
+  c.getContext('2d').drawImage(v,(w-sq)/2,(h-sq)/2,sq,sq,0,0,480,480); return c.toDataURL('image/jpeg',.85); }
+function afterShot(url){ photoURL=url; shoot(); stopCam(); setTimeout(goForm,650); }
+function setThumb(){ const img=$('#thumbImg'), sv=$('#thumbSvg'); if(photoURL){ img.src=photoURL; img.hidden=false; sv.style.display='none'; } else { img.hidden=true; sv.style.display=''; } }
+
+/* ---------- przeliczenie rankingu po naprawie ---------- */
+const BASE={people:PEOPLE.map(p=>p.slice()),sh:SH.map(x=>x.slice()),fZ:27075,fK:33844,fC:20.3};
+let EARN={zl:0,kwh:0,co2:0};
+function renderRank(){ const people=BASE.people.map(p=>p.slice()); const me=people.find(p=>p[3]); me[2]+=EARN.zl; people.sort((a,b)=>b[2]-a[2]);
+  PEOPLE.length=0; people.forEach(p=>PEOPLE.push(p));
+  SH.forEach(x=>{ x[3]=BASE.sh.find(y=>y[0]===x[0])[3]+(x[0]==='B'?EARN.zl*0.2:0); }); const tot=SH.reduce((a,x)=>a+x[3],0);
+  SH.forEach(x=>x[4]=Math.round(x[3]/tot*100)); SH.sort((a,b)=>b[3]-a[3]);
+  const mx=SH[0][3];
+  $('#pO').innerHTML=PEOPLE.map((p,i)=>{const s=SH.find(x=>x[0]===p[1]);const ini=p[0].split(' ').map(w=>w[0]).join('');const rc=['#C9971C','#8A97A8','#B5703A'][i]||'#98A2B3';
+    return `<div class="pr${p[3]?' me':''}" style="transition-delay:${i*90}ms"><b class="rk" style="color:${rc}">${i+1}</b><span class="av" style="background:${s[1]}">${ini}</span><div class="pn"><b>${p[0]}${p[3]?'<em>Ty</em>':''}</b><span>Zmiana ${p[1]}</span></div><div class="pz"><b>${fmt(p[2],0)} zł</b><span>${fmt(p[2]*.00075,2)} t CO₂</span></div></div>`}).join('');
+  $('#bars').innerHTML=SH.map((s,i)=>`<div class="bc">${s[0]==='B'?'<span class="tag">Twoja zmiana</span>':''}<b class="amt" style="color:${s[2]}">${fmt(s[3],0)} zł</b>${pig(s[1],s[2])}<span class="bar" style="--h:${Math.round(s[3]/mx*170)}px;background:${s[1]}"></span><span class="bn">Zmiana ${s[0]}</span><span class="bs">${i+1}. miejsce</span></div>`).join('');
+  $('#share').innerHTML=SH.map(s=>`<span style="--w:${s[4]}%;background:${s[1]}"></span>`).join('');
+  $('#leg').innerHTML=SH.map(s=>`<span><i style="background:${s[1]}"></i>Zmiana ${s[0]} · ${s[4]}%</span>`).join('');
+  const pigTot=SH.reduce((a,x)=>a+x[3],0); const fp=$('#pF .fs:last-of-type'); if(fp) fp.textContent=`z tego ${fmt(pigTot,0)} zł w skarbonkach zmian`;
+  goRank.done=false; }
+
 /* ---------- ekrany ---------- */
 const LAYERS=['#l-home','#l-cam','#l-form','#l-wait','#l-app','#l-rank','#l-post'];
-function show(id,light){ LAYERS.forEach(l=>{ const el=$(l); el.classList.remove('gone'); if(l!==id) el.classList.remove('on'); }); on(id); lt(!!light); }
-function goCam(){ $('#focus').classList.remove('ok'); show('#l-cam'); $('#camSvg').innerHTML=scene('c',true); navTo(0); on('#gnav'); }
-function goForm(){ R={zoom:false,pin:false,cat:null,size:null,sent:false};
+function show(id,light){ if(id!=='#l-cam') stopCam(); if(id!=='#l-form') off('#formOk'); if(id!=='#l-post'){ off('#postOk'); off('#cmpPlane'); } LAYERS.forEach(l=>{ const el=$(l); el.classList.remove('gone'); if(l!==id) el.classList.remove('on'); }); on(id); lt(!!light); }
+function goCam(){ $('#focus').classList.remove('ok'); show('#l-cam'); $('#camSvg').innerHTML=scene('c',true); $('#l-cam').getAnimations({subtree:true}).forEach(a=>{try{a.play()}catch(e){}}); navTo(0); on('#gnav'); startCam(); }
+function goForm(){ R={zoom:false,pin:false,cat:null,size:null,sent:false,zone:null}; setThumb(); stage.querySelectorAll('.det').forEach(d=>d.classList.remove('on'));
   $('#mapSvg').classList.remove('z'); $('#pin').setAttribute('opacity','0'); $('#pin').getAnimations().forEach(a=>a.cancel());
   const h=$('#hint'); h.textContent='Stuknij budynek, aby przybliżyć'; h.classList.remove('ok'); $('#mScale').textContent='50 m';
   stage.querySelectorAll('.chips .chip').forEach(c=>c.classList.remove('sel')); off('#sizeBox'); off('#formOk'); updSend(); show('#l-form'); navTo(0); }
-function goWait(){ show('#l-wait',true); const w=$('#l-wait'); w.classList.remove('done'); off('#estUR'); $('#seeImp').style.opacity=0; navTo(0);
+function goWait(){ $('#wZone').textContent=R.zone||'—'; show('#l-wait',true); const w=$('#l-wait'); w.classList.remove('done'); off('#estUR'); $('#seeImp').style.opacity=0; navTo(0);
   setTimeout(()=>{ w.classList.add('done'); chime(); setTimeout(()=>{ on('#estUR'); const e=est();
     if(e){ $('#uL').innerHTML='≈ <span id="uKw">0,0</span> kW'; $('#uR').innerHTML='ok. <span id="uZl">0,0</span> tys. zł'; tween('#uKw',0,e.kw,t+.1,1,1); tween('#uZl',0,e.yr,t+.1,1,1); }
     else { $('#uL').innerHTML='<span class="est-none">Wartość oceni UR</span>'; $('#uR').innerHTML='<span class="est-none">efekt: środowisko</span>'; }
     setTimeout(()=>{ on('#push'); beep(988,.12,'sine',.05); beep(1319,.18,'sine',.05,.1); $('#seeImp').style.opacity=1; },1800); },500); },3200); }
 function goImpact(){ off('#push'); show('#l-app'); navTo(1); on('#cImpact'); on('#cVote');
   const e=est()||{wk:0}; const k=e.wk, z=k*0.8, c=k*0.0006;
-  if(R.sent&&!goImpact.done){ tween('#vK',0,k,t,2.4,0); tween('#vZ',0,z,t,2.4,0); tween('#vC',0,c,t,2.4,2); goImpact.done=true;
+  if(R.sent&&!goImpact.done){ EARN.zl+=z; EARN.kwh+=k; EARN.co2+=c; renderRank(); tween('#vK',0,k,t,2.4,0); tween('#vZ',0,z,t,2.4,0); tween('#vC',0,c,t,2.4,2); goImpact.done=true;
     setTimeout(()=>{ $('#cmpHouse').lastChild.textContent=k>0?` Tyle prądu zużywa dom na wsi przez ok. ${Math.max(1,Math.round(k/180))} ${plM(Math.round(k/180))}`:' Efekt środowiskowy oceni utrzymanie ruchu'; on('#cmpHouse'); },1500); }
   else if(!R.sent && !goImpact.done){ $('#vK').textContent='0'; $('#vZ').textContent='0'; $('#vC').textContent='0,00'; $('#cmpHouse').lastChild.textContent=' Zgłoś pierwszą stratę, a tu zobaczysz jej efekt'; on('#cmpHouse'); } }
 function plM(n){ if(n<=1) return 'miesiąc'; if(n%10>=2&&n%10<=4&&(n%100<10||n%100>=20)) return 'miesiące'; return 'miesięcy'; }
-function goRank(){ show('#l-rank'); navTo(2); seg(+$('#seg').dataset.v||0); if(!goRank.done){ goRank.done=true; tween('#fZ',0,27075,t+.2,1.2,0); tween('#fK',0,33844,t+.2,1.2,0); tween('#fC',0,20.3,t+.2,1.2,1); setTimeout(()=>on('#cmpFirm'),900);} }
+function goRank(){ show('#l-rank'); navTo(2); seg(+$('#seg').dataset.v||0); if(!goRank.done){ goRank.done=true; tween('#fZ',0,BASE.fZ+EARN.zl,t+.2,1.2,0); tween('#fK',0,BASE.fK+EARN.kwh,t+.2,1.2,0); tween('#fC',0,BASE.fC+EARN.co2,t+.2,1.2,1); setTimeout(()=>on('#cmpFirm'),900);} }
 function goPost(){ show('#l-post'); navTo(3); }
 
 /* ---------- interakcje ---------- */
 function bind(){
-  $('#appEP').addEventListener('click',()=>{ ensureAudio(); tap('#appEP'); launch(); setTimeout(()=>{ $('#l-cam').getAnimations().forEach(a=>a.finish()); },600); });
-  $('#shutter').addEventListener('click',()=>{ ensureAudio(); tap('#shutter'); shoot(); setTimeout(goForm,650); });
-  $('#mapSvg').addEventListener('click',()=>{ if(!R.zoom){ R.zoom=true; tap('#bT'); zoomMap(); } else if(!R.pin){ R.pin=true; tap('#xT'); dropPin(); } updSend(); });
+  $('#appEP').addEventListener('click',()=>{ ensureAudio(); tap('#appEP'); launch(); setTimeout(()=>{ $('#l-cam').getAnimations().forEach(a=>a.finish()); },600); startCam(); });
+  $('#shutter').addEventListener('click',()=>{ ensureAudio(); tap('#shutter');
+    if($('#l-cam').classList.contains('live')){ const u=grab(); afterShot(u); } else { $('#camFile').value=''; $('#camFile').click(); } });
+  $('#camFile').addEventListener('change',e=>{ const f=e.target.files&&e.target.files[0]; if(!f) return; const rd=new FileReader(); rd.onload=()=>afterShot(rd.result); rd.readAsDataURL(f); });
+  $('#camAlt').addEventListener('click',()=>{ ensureAudio(); afterShot(null); });
+  $('#mapSvg').addEventListener('click',mapClick);
+  $('#zOut').addEventListener('click',e=>{ e.stopPropagation(); zoomOut(); });
+  $('#zIn').addEventListener('click',e=>{ e.stopPropagation(); });
   stage.querySelectorAll('.chips .chip').forEach(c=>c.addEventListener('click',()=>{ stage.querySelectorAll('.chips .chip').forEach(x=>x.classList.remove('sel')); c.classList.add('sel'); R.cat=c.textContent.trim(); R.size=null; renderSizes(); updSend(); beep(520,.05,'triangle',.05); }));
   $('#sizeBox').addEventListener('click',e=>{ const s=e.target.closest('[data-sz]'); if(!s) return; R.size=+s.dataset.sz; renderSizes(); updSend(); beep(520,.05,'triangle',.05); });
-  $('#send').addEventListener('click',()=>{ if($('#send').disabled) return; tap('#send'); on('#formOk'); chime(); R.sent=true; goImpact.done=false; setTimeout(goWait,1300); });
+  $('#send').addEventListener('click',()=>{ if($('#send').disabled) return; tap('#send'); repNo++; stage.querySelectorAll('.rno').forEach(x=>x.textContent=repNo); on('#formOk'); chime(); R.sent=true; goImpact.done=false; setTimeout(goWait,1300); });
   $('#push').addEventListener('click',()=>{ tap('#push'); goImpact(); });
   $('#seeImp').addEventListener('click',goImpact);
   stage.querySelectorAll('.vo').forEach(v=>v.addEventListener('click',()=>{ const base={1:40,2:34,3:26}; const id=+v.dataset.v;
@@ -629,7 +713,7 @@ function fit(){ const W=innerWidth,H=innerHeight, mob=W<600; document.body.class
   else { document.documentElement.style.setProperty('--sh','812px'); S=Math.min(1.2,(H-24)/840,(W-24)/410); }
   document.documentElement.style.setProperty('--s',S.toFixed(4)); const pw=$('#phoneWrap'); pw.style.width=(mob?382:410)*S+'px'; pw.style.height=(mob?H:(840*S))+'px'; }
 function loop(){ const T=now(); for(const w of tweens){ if(T<w.start) continue; const p=Math.min(1,(T-w.start)/w.dur), e=1-Math.pow(1-p,3); if(w.el) w.el.textContent=fmt(w.from+(w.to-w.from)*e,w.dec)+w.suf; } tweens=tweens.filter(w=>T<w.start+w.dur+0.05); requestAnimationFrame(loop); }
-function init(){ renderDynamic(); $('#thumbSvg').innerHTML=scene('t',false); bind(); recalc(); fit(); }
+function init(){ renderDynamic(); $('#thumbSvg').innerHTML=scene('t',false); buildMap(); renderRank(); bind(); recalc(); fit(); }
 document.getElementById('resetBtn').addEventListener('click',()=>location.reload());
 addEventListener('resize',fit); init(); requestAnimationFrame(loop);
 }
