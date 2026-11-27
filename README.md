@@ -16,6 +16,7 @@ Jeden plik `index.html`, bez instalacji, zaprojektowany pod telefon.
 | `index.html?ep=EP-0147&z=spr` | wejście z kodu QR na zawieszce przy maszynie (strefa podpowiedziana) |
 | `index.html#telebim` | telebim zakładu: cel miesiąca, strata tygodnia, ranking wydziałów, skarbonka |
 | `index.html#symulator` | symulator KPI pilotażu z suwakami |
+| `animacja.html` | animacja pokazowa (ok. 50 s) do prezentacji |
 
 Na pokazie przycisk **„Demo: UR potwierdza naprawę”** zastępuje panel utrzymania ruchu. Stan zapisuje się w przeglądarce. **„Reset demo”** na ekranie startowym czyści dane.
 
