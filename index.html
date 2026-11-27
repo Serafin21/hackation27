@@ -228,7 +228,7 @@ const CFG = {
 
 /* Kategorie: moc strat [kW] dla klasy mały/średni/duży i roczny czas trwania [h] */
 const CATS = [
-  {id:'air',  ico:'💨', name:'Wyciek powietrza', sizes:['Mały syk','Średni · ok. 3 mm','Duży syk'], kw:[1.1,4.3,17.2], h:8000,
+  {id:'air',  ico:'💨', name:'Wyciek powietrza', sizes:['Mały','Średni · ok. 3 mm','Duży'], kw:[1.1,4.3,17.2], h:8000,
    edu:'Sprężone powietrze to najdroższe medium w zakładzie: tylko ok. 10–15% energii sprężarki zamienia się w użyteczną pracę (szacunek). Wyciek działa 24 h na dobę, także w weekend.'},
   {id:'idle', ico:'⚙️', name:'Bieg jałowy', sizes:['Mały napęd','Średni','Duży napęd'], kw:[5,15,30], h:2000,
    edu:'Przenośnik czy wentylator bez obciążenia nadal pobiera dużą część mocy. Wyłączenie na postój to realna oszczędność, nie gest.'},
@@ -317,7 +317,7 @@ function renderHome(v){
   v.innerHTML = `
   <section class="hero">
     <div class="appic"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#1E3E72" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 3 5 14h6l-1 7 8-11h-6z" fill="#82C63F"/></svg></div>
-    <h2>Słyszysz syk? Widzisz pył?</h2>
+    <h2>Widzisz stratę na hali?</h2>
     <p>Zrób zdjęcie. Trzy dotknięcia, zero pisania.<br>Po naprawie dowiesz się, ile to dało.</p>
     <button class="big green" id="startBtn" style="margin-top:6px"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>Zgłoś stratę</button>
   </section>
