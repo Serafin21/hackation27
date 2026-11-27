@@ -262,6 +262,9 @@ body{background:var(--deep);color:#fff;font:16px/1.4 'Open Sans',system-ui,-appl
 #l-post .list{bottom:214px;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
 .focus{top:calc(50% - 150px)}
 #l-cam.live .focus{animation:none}
+#l-cam{background:#000}
+.camwait{position:absolute;left:28px;right:28px;top:calc(50% + 40px);text-align:center;color:#C9D3DD;font-weight:600;font-size:15px}
+#l-cam.live .camwait{display:none}
 #camV{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none;background:#000}
 #l-cam.live #camV{display:block}
 #l-cam.live #camSvg{display:none}
@@ -317,7 +320,7 @@ body{overflow:hidden;touch-action:manipulation}
       <!-- camera: first screen of the app -->
       <div class="layer" id="l-cam">
         <svg id="camSvg" viewBox="0 0 382 812" preserveAspectRatio="none"></svg><video id="camV" playsinline muted autoplay></video><input type="file" id="camFile" accept="image/*" capture="environment" hidden>
-        <div class="camhint">Zrób zdjęcie problemu</div>
+        <div class="camhint">Zrób zdjęcie problemu</div><div class="camwait" id="camWait">Włączam aparat…</div>
         <div class="focus" id="focus"><b class="a"></b><b class="b"></b><b class="c"></b><b class="d"></b></div>
         <div class="cambar"><div class="shutter" id="shutter"></div><span id="camLbl">Zrób zdjęcie</span></div>
         <div class="flash" id="flash"></div>
@@ -541,8 +544,8 @@ const gainOf=i=>ROWS[i][2]*hours[i];
 function renderDynamic(){
   $('#apps').innerHTML=APPS.map(a=>`<div class="app"><span class="ic${a[3]?' ep':''}"${a[3]?` id="${a[3]}"`:''} style="background:${a[1]}">${a[2]}</span>${a[0]}</div>`).join('');
   $('#dock').innerHTML=DOCK.map(d=>`<span class="ic" style="background:${d[0]}">${d[1]}</span>`).join('');
-  $('#camSvg').innerHTML=scene('c',true);
-  $('#thumbSvg').innerHTML=scene('t',false);
+  $('#camSvg').innerHTML='';
+  $('#thumbSvg').innerHTML=THUMB0;
   $('#gnav').insertAdjacentHTML('beforeend',NAV.map((n,i)=>`<div id="${n[0]}" class="${i?'':'a'}"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">${n[2]}</svg>${n[1]}</div>`).join(''));
   $('#rows').innerHTML=ROWS.map((r,i)=>`<div class="row" id="r${i}"><span class="cb"><svg width="16" height="16" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7" fill="none" stroke="#04243E" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div class="rn">${r[0]}</div><div class="stp"><span class="mi">−</span><b id="h${i}">${hours[i]} h</b><span class="pl">+</span></div><div class="rs">${r[1]}</div><span class="gain"></span></div>`).join('');
   $('#pO').innerHTML=PEOPLE.map((p,i)=>{const s=SH.find(x=>x[0]===p[1]);const ini=p[0].split(' ').map(w=>w[0]).join('');const rc=['#C9971C','#8A97A8','#B5703A'][i]||'#98A2B3';
@@ -609,6 +612,7 @@ const BLD=[
  {id:'wars',name:'Warsztat',box:[132,100,84,36],det:'<rect x="140" y="107" width="30" height="20" rx="1"/><text x="155" y="118.3" text-anchor="middle">mechaniczny</text><rect x="176" y="107" width="32" height="20" rx="1"/><text x="192" y="118.3" text-anchor="middle">magazyn części</text>'},
  {id:'spr',name:'Sprężarkownia',box:[240,98,86,56],det:'<rect x="248" y="106" width="16" height="11" rx="1"/><text x="256" y="112.6" text-anchor="middle">S1</text><rect x="248" y="123" width="16" height="11" rx="1"/><text x="256" y="129.6" text-anchor="middle">S2</text><path d="M264 111.5h12v17h-12M276 120h30"/><text x="318" y="106" text-anchor="middle">osuszacz</text><text x="258" y="141" text-anchor="middle">zbiorniki</text>'}];
 let photoURL=null, camStream=null, repNo=147;
+const THUMB0='<rect x="101" y="340" width="180" height="180" fill="#1E3E72"/><g transform="translate(191 430)" fill="none" stroke="#fff" stroke-width="7" stroke-linejoin="round"><path d="M-40-18h18l10-14h24l10 14h18v50h-80z"/><circle cx="0" cy="6" r="16"/></g>';
 function buildMap(){ $('#bldHits').innerHTML=BLD.map(b=>`<rect class="bh" data-b="${b.id}" x="${b.box[0]}" y="${b.box[1]}" width="${b.box[2]}" height="${b.box[3]}" rx="3"/>`).join('');
   $('#dets').innerHTML=BLD.map(b=>`<g class="det" id="d-${b.id}">${b.det}</g>`).join(''); }
 function svgPt(e){ const svg=$('#mapSvg'), p=svg.createSVGPoint(); p.x=e.clientX; p.y=e.clientY; return p.matrixTransform(svg.getScreenCTM().inverse()); }
@@ -633,12 +637,12 @@ function mapClick(e){ const p=svgPt(e);
   updSend(); }
 
 /* ---------- aparat: podgląd na żywo, zdjęcie z galerii albo przykładowe ---------- */
-async function startCam(){ const L=$('#l-cam'); L.classList.remove('live'); $('#camLbl').textContent='Zrób zdjęcie';
-  if(!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia)) { $('#camLbl').textContent='Stuknij, aby wybrać zdjęcie'; return; }
+async function startCam(){ const L=$('#l-cam'); L.classList.remove('live'); $('#camLbl').textContent='Zrób zdjęcie'; $('#camWait').textContent='Włączam aparat…';
+  if(!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia)) { $('#camLbl').textContent='Stuknij, aby zrobić zdjęcie'; $('#camWait').textContent='Stuknij spust, aby otworzyć aparat telefonu'; return; }
   try{ camStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:1280}},audio:false});
     if(!$('#l-cam').classList.contains('on')){ stopCam(); return; }
     const v=$('#camV'); v.srcObject=camStream; await v.play().catch(()=>{}); L.classList.add('live');
-  }catch(err){ camStream=null; $('#camLbl').textContent='Stuknij, aby wybrać zdjęcie'; } }
+  }catch(err){ camStream=null; $('#camLbl').textContent='Stuknij, aby zrobić zdjęcie'; $('#camWait').textContent='Brak dostępu do podglądu. Stuknij spust, aby otworzyć aparat telefonu'; } }
 function stopCam(){ if(camStream){ camStream.getTracks().forEach(tr=>tr.stop()); camStream=null; } const v=$('#camV'); if(v) v.srcObject=null; $('#l-cam').classList.remove('live'); }
 function grab(){ const v=$('#camV'); const w=v.videoWidth,h=v.videoHeight; if(!w) return null; const sq=Math.min(w,h), c=document.createElement('canvas'); c.width=c.height=480;
   c.getContext('2d').drawImage(v,(w-sq)/2,(h-sq)/2,sq,sq,0,0,480,480); return c.toDataURL('image/jpeg',.85); }
@@ -664,7 +668,7 @@ function renderRank(){ const people=BASE.people.map(p=>p.slice()); const me=peop
 /* ---------- ekrany ---------- */
 const LAYERS=['#l-home','#l-cam','#l-form','#l-wait','#l-app','#l-rank','#l-post'];
 function show(id,light){ if(id!=='#l-cam') stopCam(); if(id!=='#l-form') off('#formOk'); if(id!=='#l-post'){ off('#postOk'); off('#cmpPlane'); } LAYERS.forEach(l=>{ const el=$(l); el.classList.remove('gone'); if(l!==id) el.classList.remove('on'); }); on(id); lt(!!light); }
-function goCam(){ $('#focus').classList.remove('ok'); show('#l-cam'); $('#camSvg').innerHTML=scene('c',true); $('#l-cam').getAnimations({subtree:true}).forEach(a=>{try{a.play()}catch(e){}}); navTo(0); on('#gnav'); startCam(); }
+function goCam(){ $('#focus').classList.remove('ok'); show('#l-cam'); $('#camSvg').innerHTML=''; navTo(0); on('#gnav'); startCam(); }
 function goForm(){ $('#l-form').scrollTop=0; R={zoom:false,pin:false,cat:null,size:null,sent:false,zone:null}; setThumb(); stage.querySelectorAll('.det').forEach(d=>d.classList.remove('on'));
   $('#mapSvg').classList.remove('z'); $('#pin').setAttribute('opacity','0'); $('#pin').getAnimations().forEach(a=>a.cancel());
   const h=$('#hint'); h.textContent='Stuknij budynek, aby przybliżyć'; h.classList.remove('ok'); $('#mScale').textContent='50 m';
@@ -721,7 +725,7 @@ function fit(){ const W=innerWidth,H=innerHeight, mob=W<600; document.body.class
   else { document.documentElement.style.setProperty('--sh','812px'); S=Math.min(1.2,(H-24)/840,(W-24)/410); }
   document.documentElement.style.setProperty('--s',S.toFixed(4)); const pw=$('#phoneWrap'); pw.style.width=(mob?382:410)*S+'px'; pw.style.height=(mob?H:(840*S))+'px'; }
 function loop(){ const T=now(); for(const w of tweens){ if(T<w.start) continue; const p=Math.min(1,(T-w.start)/w.dur), e=1-Math.pow(1-p,3); if(w.el) w.el.textContent=fmt(w.from+(w.to-w.from)*e,w.dec)+w.suf; } tweens=tweens.filter(w=>T<w.start+w.dur+0.05); requestAnimationFrame(loop); }
-function init(){ renderDynamic(); $('#thumbSvg').innerHTML=scene('t',false); buildMap(); renderRank(); bind(); recalc(); fit(); }
+function init(){ renderDynamic(); $('#thumbSvg').innerHTML=THUMB0; buildMap(); renderRank(); bind(); recalc(); fit(); }
 document.getElementById('resetBtn').addEventListener('click',()=>location.reload());
 addEventListener('resize',fit); init(); requestAnimationFrame(loop);
 }
