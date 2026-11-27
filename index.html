@@ -253,6 +253,15 @@ body{background:var(--deep);color:#fff;font:16px/1.4 'Open Sans',system-ui,-appl
 #postOk .cmp{margin-top:14px;text-align:left}
 
 /* ===== tryb interaktywny (demo na telefon) ===== */
+/* przewijanie treści na niskich ekranach */
+#l-form{overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+#l-form .fb{padding-bottom:96px}
+.ac,.pan{overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+.ac{bottom:74px}
+#acIn{padding-bottom:24px}
+#l-post .list{bottom:214px;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+.focus{top:calc(50% - 150px)}
+#l-cam.live .focus{animation:none}
 #camV{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none;background:#000}
 #l-cam.live #camV{display:block}
 #l-cam.live #camSvg{display:none}
@@ -310,7 +319,7 @@ body{overflow:hidden;touch-action:manipulation}
         <svg id="camSvg" viewBox="0 0 382 812" preserveAspectRatio="none"></svg><video id="camV" playsinline muted autoplay></video><input type="file" id="camFile" accept="image/*" capture="environment" hidden>
         <div class="camhint">Zrób zdjęcie problemu</div>
         <div class="focus" id="focus"><b class="a"></b><b class="b"></b><b class="c"></b><b class="d"></b></div>
-        <button class="camalt" id="camAlt">Użyj zdjęcia przykładowego</button><div class="cambar"><div class="shutter" id="shutter"></div><span id="camLbl">Zrób zdjęcie</span></div>
+        <div class="cambar"><div class="shutter" id="shutter"></div><span id="camLbl">Zrób zdjęcie</span></div>
         <div class="flash" id="flash"></div>
       </div>
 
@@ -656,7 +665,7 @@ function renderRank(){ const people=BASE.people.map(p=>p.slice()); const me=peop
 const LAYERS=['#l-home','#l-cam','#l-form','#l-wait','#l-app','#l-rank','#l-post'];
 function show(id,light){ if(id!=='#l-cam') stopCam(); if(id!=='#l-form') off('#formOk'); if(id!=='#l-post'){ off('#postOk'); off('#cmpPlane'); } LAYERS.forEach(l=>{ const el=$(l); el.classList.remove('gone'); if(l!==id) el.classList.remove('on'); }); on(id); lt(!!light); }
 function goCam(){ $('#focus').classList.remove('ok'); show('#l-cam'); $('#camSvg').innerHTML=scene('c',true); $('#l-cam').getAnimations({subtree:true}).forEach(a=>{try{a.play()}catch(e){}}); navTo(0); on('#gnav'); startCam(); }
-function goForm(){ R={zoom:false,pin:false,cat:null,size:null,sent:false,zone:null}; setThumb(); stage.querySelectorAll('.det').forEach(d=>d.classList.remove('on'));
+function goForm(){ $('#l-form').scrollTop=0; R={zoom:false,pin:false,cat:null,size:null,sent:false,zone:null}; setThumb(); stage.querySelectorAll('.det').forEach(d=>d.classList.remove('on'));
   $('#mapSvg').classList.remove('z'); $('#pin').setAttribute('opacity','0'); $('#pin').getAnimations().forEach(a=>a.cancel());
   const h=$('#hint'); h.textContent='Stuknij budynek, aby przybliżyć'; h.classList.remove('ok'); $('#mScale').textContent='50 m';
   stage.querySelectorAll('.chips .chip').forEach(c=>c.classList.remove('sel')); off('#sizeBox'); off('#formOk'); updSend(); show('#l-form'); navTo(0); }
@@ -680,13 +689,12 @@ function bind(){
   $('#shutter').addEventListener('click',()=>{ ensureAudio(); tap('#shutter');
     if($('#l-cam').classList.contains('live')){ const u=grab(); afterShot(u); } else { $('#camFile').value=''; $('#camFile').click(); } });
   $('#camFile').addEventListener('change',e=>{ const f=e.target.files&&e.target.files[0]; if(!f) return; const rd=new FileReader(); rd.onload=()=>afterShot(rd.result); rd.readAsDataURL(f); });
-  $('#camAlt').addEventListener('click',()=>{ ensureAudio(); afterShot(null); });
   $('#mapSvg').addEventListener('click',mapClick);
   $('#zOut').addEventListener('click',e=>{ e.stopPropagation(); zoomOut(); });
   $('#zIn').addEventListener('click',e=>{ e.stopPropagation(); });
   stage.querySelectorAll('.chips .chip').forEach(c=>c.addEventListener('click',()=>{ stage.querySelectorAll('.chips .chip').forEach(x=>x.classList.remove('sel')); c.classList.add('sel'); R.cat=c.textContent.trim(); R.size=null; renderSizes(); updSend(); beep(520,.05,'triangle',.05); }));
   $('#sizeBox').addEventListener('click',e=>{ const s=e.target.closest('[data-sz]'); if(!s) return; R.size=+s.dataset.sz; renderSizes(); updSend(); beep(520,.05,'triangle',.05); });
-  $('#send').addEventListener('click',()=>{ if($('#send').disabled) return; tap('#send'); repNo++; stage.querySelectorAll('.rno').forEach(x=>x.textContent=repNo); on('#formOk'); chime(); R.sent=true; goImpact.done=false; setTimeout(goWait,1300); });
+  $('#send').addEventListener('click',()=>{ if($('#send').disabled) return; tap('#send'); $('#l-form').scrollTop=0; repNo++; stage.querySelectorAll('.rno').forEach(x=>x.textContent=repNo); on('#formOk'); chime(); R.sent=true; goImpact.done=false; setTimeout(goWait,1300); });
   $('#push').addEventListener('click',()=>{ tap('#push'); goImpact(); });
   $('#seeImp').addEventListener('click',goImpact);
   stage.querySelectorAll('.vo').forEach(v=>v.addEventListener('click',()=>{ const base={1:40,2:34,3:26}; const id=+v.dataset.v;
@@ -709,7 +717,7 @@ function recalc(){ let k=0; ROWS.forEach((r,i)=>{ const g=gainOf(i); const row=$
 
 /* ---------- dopasowanie do ekranu ---------- */
 function fit(){ const W=innerWidth,H=innerHeight, mob=W<600; document.body.classList.toggle('mobile',mob);
-  if(mob){ S=W/382; document.documentElement.style.setProperty('--sh',Math.max(640,Math.round(H/S))+'px'); }
+  if(mob){ S=W/382; document.documentElement.style.setProperty('--sh',Math.round(H/S)+'px'); }
   else { document.documentElement.style.setProperty('--sh','812px'); S=Math.min(1.2,(H-24)/840,(W-24)/410); }
   document.documentElement.style.setProperty('--s',S.toFixed(4)); const pw=$('#phoneWrap'); pw.style.width=(mob?382:410)*S+'px'; pw.style.height=(mob?H:(840*S))+'px'; }
 function loop(){ const T=now(); for(const w of tweens){ if(T<w.start) continue; const p=Math.min(1,(T-w.start)/w.dur), e=1-Math.pow(1-p,3); if(w.el) w.el.textContent=fmt(w.from+(w.to-w.from)*e,w.dec)+w.suf; } tweens=tweens.filter(w=>T<w.start+w.dur+0.05); requestAnimationFrame(loop); }
