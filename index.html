@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#1E3E72">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>EnergoPatrol · Cementownia Warta</title>
+<style>
+/* Barwy i typografia jak w animacji EnergoPatrol: granat Warty, zieleń marki, Open Sans */
+:root{
+  --deep:#04243E;--navy:#1E3E72;--green:#82C63F;--green-d:#4F8A16;--green-bg:#EFF7E6;
+  --ink:#101828;--paper:#F9F9FB;--line:#E3E7EE;--muted:#5B6576;--warn:#B54708;--warn-bg:#FEF0C7;
+  --r:18px;--safe-b:env(safe-area-inset-bottom,0px);--safe-t:env(safe-area-inset-top,0px)
+}
+*{box-sizing:border-box;min-width:0;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%}
+body{font:17px/1.45 'Open Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;color:var(--ink);background:var(--deep);-webkit-font-smoothing:antialiased;overscroll-behavior-y:none}
+button{font:inherit;color:inherit;border:0;background:none;cursor:pointer;touch-action:manipulation}
+h1,h2,h3,h4,p{margin:0}
+.hidden{display:none!important}
+
+/* ===== powłoka aplikacji (telefon) ===== */
+#app{max-width:480px;min-height:100%;margin:0 auto;background:var(--paper);position:relative;display:flex;flex-direction:column}
+.hdr{background:var(--navy);color:#fff;padding:calc(14px + var(--safe-t)) 18px 16px;display:flex;align-items:flex-end;justify-content:space-between;gap:12px;position:sticky;top:0;z-index:20}
+.hdr h1{font-size:22px;font-weight:800;letter-spacing:-.01em;line-height:1.15}
+.hdr p{font-size:14px;opacity:.8;margin-top:2px}
+.back{width:44px;height:44px;border-radius:12px;background:rgba(255,255,255,.14);display:grid;place-items:center;flex:none}
+.pill{background:rgba(255,255,255,.16);border-radius:20px;padding:6px 12px;font-size:13px;font-weight:700;white-space:nowrap}
+main{flex:1;padding:16px 16px calc(104px + var(--safe-b));display:flex;flex-direction:column;gap:14px}
+.demo-note{font-size:13px;color:var(--muted);text-align:center;padding:2px 8px}
+
+/* dolna nawigacja pod kciukiem */
+nav.tabs{position:fixed;left:50%;transform:translateX(-50%);bottom:0;width:100%;max-width:480px;background:#fff;border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(4,1fr);padding:6px 6px calc(6px + var(--safe-b));z-index:30}
+nav.tabs button{min-height:60px;border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:13px;font-weight:700;color:var(--muted)}
+nav.tabs button svg{width:26px;height:26px}
+nav.tabs button.on{color:var(--navy);background:#EEF2F8}
+
+/* elementy */
+.card{background:#fff;border-radius:var(--r);padding:16px;box-shadow:0 0 0 1px var(--line),0 8px 20px rgba(16,24,40,.05)}
+.ct{font-size:14px;font-weight:700;color:var(--muted);margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.big{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;min-height:60px;border-radius:16px;font-weight:800;font-size:18px;padding:14px 18px;text-align:center}
+.big.green{background:var(--green);color:var(--deep)}
+.big.navy{background:var(--navy);color:#fff}
+.big.ghost{background:#fff;color:var(--navy);box-shadow:inset 0 0 0 2px var(--navy)}
+.big:disabled{opacity:.4}
+.big:active,.chip:active,.zone:active,.row:active{transform:scale(.98)}
+.step{display:flex;align-items:center;gap:10px;font-size:15px;font-weight:800;color:var(--navy);margin-bottom:10px}
+.step i{font-style:normal;width:28px;height:28px;border-radius:50%;background:var(--navy);color:#fff;display:grid;place-items:center;font-size:14px;flex:none}
+.step.done i{background:var(--green);color:var(--deep)}
+.chips{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.chips.three{grid-template-columns:repeat(3,minmax(0,1fr))}
+.chip{min-height:64px;border:2px solid var(--line);background:#fff;border-radius:14px;padding:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;text-align:center;font-size:15px;line-height:1.2;font-weight:700}
+.chip .ico{font-size:24px;line-height:1}
+.chip.sel{background:var(--navy);border-color:var(--navy);color:#fff}
+.chip small{font-size:12px;font-weight:600;opacity:.75}
+
+/* zdjęcie */
+.photo-row{display:flex;gap:12px;align-items:stretch}
+.photo-btn{flex:1;min-height:64px;border:2px dashed #AEB7C4;border-radius:14px;display:flex;align-items:center;justify-content:center;gap:10px;font-weight:800;color:var(--navy);background:#fff;font-size:16px;position:relative;overflow:hidden}
+.photo-btn input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.thumb{width:64px;height:64px;border-radius:14px;object-fit:cover;flex:none;background:#EEF2F8}
+
+/* mapa stref */
+.map{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.zone{min-height:54px;border-radius:12px;background:#EEF2F8;border:2px solid #D3DBE6;font-size:13px;font-weight:700;color:#44506A;display:flex;align-items:center;justify-content:center;text-align:center;padding:4px 6px;line-height:1.15}
+.zone.w3{grid-column:span 3}
+.zone.w2{grid-column:span 2}
+.zone.sel{background:var(--navy);border-color:var(--navy);color:#fff}
+.zone.hint{border-color:var(--green);box-shadow:0 0 0 3px rgba(130,198,63,.35)}
+.loc{margin-top:10px;display:flex;gap:10px;align-items:center;font-size:14px;color:var(--muted)}
+.loc button{min-height:48px;padding:0 14px;border-radius:12px;background:#EEF2F8;color:var(--navy);font-weight:800;font-size:14px;flex:none}
+
+/* wycena */
+.est{background:var(--deep);color:#fff;border-radius:var(--r);padding:14px 16px}
+.est .lbl{font-size:13px;opacity:.75;font-weight:600}
+.est .vals{display:flex;justify-content:space-between;gap:10px;margin-top:6px;flex-wrap:wrap}
+.est strong{font-size:20px;font-weight:800;white-space:nowrap}
+.tag{display:inline-block;white-space:nowrap;flex:none;align-self:center;font-size:11px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;border-radius:6px;padding:2px 7px;background:var(--warn-bg);color:var(--warn);vertical-align:middle}
+.tag.good{background:var(--green-bg);color:var(--green-d)}
+.est .tag{background:rgba(255,255,255,.16);color:#fff}
+
+/* status */
+.tl{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:0}
+.tl li{display:flex;gap:14px;align-items:flex-start;padding-bottom:18px;position:relative}
+.tl li:not(:last-child)::before{content:"";position:absolute;left:15px;top:32px;bottom:2px;width:2px;background:var(--line)}
+.tl .dot{width:32px;height:32px;border-radius:50%;background:#EEF2F8;border:2px solid #D3DBE6;flex:none;display:grid;place-items:center;font-weight:800;color:#fff}
+.tl li.done .dot{background:var(--green);border-color:var(--green);color:var(--deep)}
+.tl li.now .dot{background:#fff;border-color:var(--navy);box-shadow:0 0 0 4px rgba(30,62,114,.15)}
+.tl b{display:block;font-size:16px}
+.tl span{font-size:14px;color:var(--muted)}
+.demo-btn{min-height:52px;border-radius:14px;border:2px dashed var(--navy);color:var(--navy);font-weight:800;font-size:15px;width:100%;background:#fff}
+
+/* wpływ */
+.hello{display:flex;align-items:center;gap:12px}
+.av{width:52px;height:52px;border-radius:50%;background:var(--navy);color:#fff;display:grid;place-items:center;font-weight:800;font-size:18px;flex:none}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;text-align:center}
+.stats b{display:block;font-size:26px;font-weight:800;color:var(--navy);letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1.1}
+.stats span{font-size:13px;color:var(--muted);font-weight:700}
+.cmp{display:flex;gap:10px;align-items:center;margin-top:14px;background:var(--green-bg);border-radius:14px;padding:12px;font-size:15px;font-weight:600;color:#2E5A0C}
+.cmp .ico{font-size:26px}
+.edu{font-size:15px;line-height:1.5}
+.edu b{color:var(--navy)}
+.scale{margin-top:10px;font-size:14px;color:var(--muted)}
+
+/* skarbonka i głosowanie */
+.pig{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.pig b{font-size:32px;font-weight:800;color:var(--navy);letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.bar{height:14px;border-radius:8px;background:#EEF2F8;overflow:hidden;margin-top:10px}
+.bar>i{display:block;height:100%;background:var(--green);border-radius:8px;transition:width .8s cubic-bezier(.3,.8,.3,1)}
+.vote{width:100%;text-align:left;border:2px solid var(--line);border-radius:14px;padding:12px 14px;margin-top:8px;background:#fff;min-height:64px}
+.vote .top{display:flex;justify-content:space-between;gap:8px;font-weight:700;font-size:16px}
+.vote .bar{height:10px;margin-top:8px}
+.vote.sel{border-color:var(--green)}
+.vote.sel .top::after{content:"✓ Twój głos";font-size:13px;color:var(--green-d)}
+.rules{font-size:14px;color:var(--muted);margin-top:10px}
+
+/* postój */
+.row{width:100%;display:flex;gap:12px;align-items:center;text-align:left;border:2px solid var(--line);border-radius:14px;padding:12px;background:#fff;min-height:72px;margin-top:8px}
+.row .box{width:32px;height:32px;border-radius:9px;border:2.5px solid #AEB7C4;flex:none;display:grid;place-items:center;color:#fff;font-weight:900}
+.row.on{border-color:var(--green);background:#FAFDF6}
+.row.on .box{background:var(--green);border-color:var(--green);color:var(--deep)}
+.row .t{flex:1}
+.row .t b{display:block;font-size:16px}
+.row .t span{font-size:13px;color:var(--muted)}
+.row .v{font-size:13px;font-weight:800;color:var(--green-d);text-align:right;white-space:nowrap}
+.sum{margin-top:2px}
+
+/* ekran startowy */
+.hero{background:linear-gradient(170deg,var(--navy),var(--deep));color:#fff;border-radius:24px;padding:26px 20px;display:flex;flex-direction:column;gap:14px;text-align:center;align-items:center}
+.appic{width:76px;height:76px;border-radius:22px;background:#fff;display:grid;place-items:center;box-shadow:0 12px 30px rgba(0,0,0,.3)}
+.hero h2{font-size:28px;font-weight:800;letter-spacing:-.02em}
+.hero p{opacity:.8;font-size:15px}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tile{background:#fff;border-radius:var(--r);padding:14px;text-align:left;box-shadow:0 0 0 1px var(--line);min-height:96px;display:flex;flex-direction:column;justify-content:space-between}
+.tile b{font-size:22px;font-weight:800;color:var(--navy)}
+.tile span{font-size:14px;color:var(--muted);font-weight:700}
+
+/* potwierdzenie */
+.ok{display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px;padding:26px 10px}
+.ok h2{font-size:24px;font-weight:800}
+.ok p{color:var(--muted)}
+.ck{width:84px;height:84px}
+.ck circle{fill:var(--green)}
+.ck path{fill:none;stroke:#fff;stroke-width:7;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:70;stroke-dashoffset:70;animation:draw .5s .15s forwards}
+@keyframes draw{to{stroke-dashoffset:0}}
+.pop{animation:pop .45s cubic-bezier(.3,1.6,.5,1)}
+@keyframes pop{from{transform:scale(.5);opacity:0}to{transform:none;opacity:1}}
+.toast{position:fixed;left:50%;top:calc(92px + var(--safe-t));transform:translate(-50%,-16px);background:var(--deep);color:#fff;border-radius:30px;padding:12px 20px;font-weight:700;font-size:15px;opacity:0;transition:all .3s;z-index:50;max-width:90vw;text-align:center;pointer-events:none}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+
+/* ===== telebim (rzutnik / duży ekran) ===== */
+#tv{min-height:100vh;gap:clamp(10px,1.6vw,20px)!important;background:radial-gradient(circle at 1px 1px,rgba(255,255,255,.07) 1.2px,transparent 1.6px) 0 0/24px 24px,linear-gradient(155deg,#123764 0%,#04243E 62%);color:#fff;padding:clamp(16px,3vw,40px);display:flex;flex-direction:column;gap:clamp(12px,2vw,24px)}
+.tvh{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
+.tvh h1{font-size:clamp(24px,3.4vw,46px);font-weight:800;letter-spacing:-.02em}
+.tvh h1 em{font-style:normal;color:var(--green)}
+.tvh p{opacity:.75;font-size:clamp(14px,1.4vw,20px)}
+.tvg{display:grid;grid-template-columns:repeat(12,1fr);gap:clamp(10px,1.4vw,18px);flex:1;align-content:start}
+.tvc{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:22px;padding:clamp(14px,1.7vw,24px);display:flex;flex-direction:column;gap:8px}
+.tvc h3{font-size:clamp(13px,1.2vw,17px);font-weight:700;opacity:.75;text-transform:uppercase;letter-spacing:.06em}
+.kpi{font-size:clamp(32px,4.4vw,64px);font-weight:800;letter-spacing:-.03em;line-height:1;font-variant-numeric:tabular-nums}
+.kpi small{font-size:.38em;opacity:.75;font-weight:700;margin-left:6px;letter-spacing:0}
+.tvc .bar{background:rgba(255,255,255,.14);height:18px}
+.rank{display:flex;flex-direction:column;gap:9px}
+.rank div{display:grid;grid-template-columns:minmax(90px,30%) 1fr auto;gap:12px;align-items:center;font-weight:700;font-size:clamp(14px,1.4vw,19px)}
+.rank .bar{margin:0;height:16px}
+.rank .bar>i{background:var(--green)}
+.span4{grid-column:span 4}.span6{grid-column:span 6}.span8{grid-column:span 8}.span12{grid-column:span 12}
+@media (max-width:820px){.span4,.span6,.span8{grid-column:span 12}}
+.tvfoot{font-size:13px;opacity:.6;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+
+/* ===== symulator ===== */
+#sim{min-height:100%;background:var(--paper);max-width:760px;margin:0 auto;padding:calc(18px + var(--safe-t)) 16px 40px;display:flex;flex-direction:column;gap:14px}
+.sl{display:flex;flex-direction:column;gap:6px}
+.sl label{display:flex;justify-content:space-between;font-weight:700;font-size:16px}
+.sl output{color:var(--navy);font-weight:800}
+input[type=range]{width:100%;height:44px;accent-color:var(--navy)}
+.res{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.res div{background:#fff;border-radius:16px;padding:14px;box-shadow:0 0 0 1px var(--line)}
+.res b{display:block;font-size:26px;font-weight:800;color:var(--navy);font-variant-numeric:tabular-nums}
+.res span{font-size:14px;color:var(--muted);font-weight:700}
+.linkrow{display:flex;gap:8px;flex-wrap:wrap}
+.linkrow a{color:var(--navy);font-weight:800;font-size:15px;padding:10px 14px;border-radius:12px;background:#EEF2F8;text-decoration:none}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<!-- ===================== APLIKACJA PRACOWNIKA ===================== -->
+<div id="app">
+  <header class="hdr" id="hdr">
+    <div style="display:flex;gap:12px;align-items:flex-end">
+      <button class="back hidden" id="backBtn" aria-label="Wstecz"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
+      <div><h1 id="hTitle">EnergoPatrol</h1><p id="hSub">Cementownia Warta · Zmiana B</p></div>
+    </div>
+    <span class="pill" id="hPill">Jan K.</span>
+  </header>
+  <main id="view"></main>
+  <nav class="tabs" id="tabs" aria-label="Nawigacja">
+    <button data-tab="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 3 5 14h6l-1 7 8-11h-6z"/></svg>Zgłoś</button>
+    <button data-tab="impact"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Mój wpływ</button>
+    <button data-tab="pig"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 19c0-3 3-5 6-5s6 2 6 5"/><circle cx="9" cy="8" r="3.5"/><path d="M15 14c3 0 6 1.5 6 4M16 4.5a3.5 3.5 0 0 1 0 7"/></svg>Skarbonka</button>
+    <button data-tab="post"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 6a7 7 0 1 0 10 0M12 3v8"/></svg>Postój</button>
+  </nav>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+</div>
+
+<!-- ===================== TELEBIM ===================== -->
+<div id="tv" class="hidden"></div>
+
+<!-- ===================== SYMULATOR KPI ===================== -->
+<div id="sim" class="hidden"></div>
+
+<script>
+/* ============================================================
+   EnergoPatrol – klikalny prototyp (Innovation Hack, Wyzwanie 4)
+   Wszystkie liczby to SZACUNKI na danych przykładowych.
+   Parametry jak w animacji: 0,8 zł/kWh · 0,6 t CO2/MWh · 8000 h/rok
+   ============================================================ */
+const CFG = {
+  PRICE: 0.8,        // zł/kWh (szacunek, cena prądu jako parametr)
+  CO2: 0.6,          // kg CO2/kWh = t/MWh (szacunek)
+  POOL: 0.20,        // 20% zweryfikowanych oszczędności do skarbonki zmiany
+  HOUSE_KWH_MONTH: 180, // dom na wsi ~2200 kWh/rok (szacunek)
+  WATER_PRICE: 10    // zł/m3 (szacunek)
+};
+
+/* Kategorie: moc strat [kW] dla klasy mały/średni/duży i roczny czas trwania [h] */
+const CATS = [
+  {id:'air',  ico:'💨', name:'Wyciek powietrza', sizes:['Mały syk','Średni · ok. 3 mm','Duży syk'], kw:[1.1,4.3,17.2], h:8000,
+   edu:'Sprężone powietrze to najdroższe medium w zakładzie: tylko ok. 10–15% energii sprężarki zamienia się w użyteczną pracę (szacunek). Wyciek działa 24 h na dobę, także w weekend.'},
+  {id:'idle', ico:'⚙️', name:'Bieg jałowy', sizes:['Mały napęd','Średni','Duży napęd'], kw:[5,15,30], h:2000,
+   edu:'Przenośnik czy wentylator bez obciążenia nadal pobiera dużą część mocy. Wyłączenie na postój to realna oszczędność, nie gest.'},
+  {id:'light',ico:'💡', name:'Oświetlenie', sizes:['Kilka lamp','Rząd lamp','Cała hala'], kw:[0.4,1.2,3], h:4000,
+   edu:'Oświetlenie to niewielka część zużycia zakładu. Większe straty dają napędy i sprężone powietrze, ale każda zbędna godzina się liczy.'},
+  {id:'ins',  ico:'🧱', name:'Izolacja', sizes:['Mały ubytek','Średni','Duży ubytek'], kw:[2,6,15], h:8000,
+   edu:'Nieszczelna lub zniszczona izolacja oznacza ciągłą ucieczkę ciepła. Część tej energii trzeba wytworzyć ponownie.'},
+  {id:'dust', ico:'🌫️', name:'Pylenie', sizes:['Lekkie','Wyraźne','Silne'], kw:null, h:0,
+   edu:'Emisja niezorganizowana (przesypy, nieszczelne osłony) to sprawa sąsiadów i jeden z celów EMAS Warty. Wartość oceni utrzymanie ruchu.'},
+  {id:'water',ico:'💧', name:'Woda', sizes:['Kapanie','Strużka','Wyciek'], m3h:[0.02,0.1,0.4], h:8000,
+   edu:'Mniej wody pitnej to jeden z celów środowiskowych Warty. Cieknący zawór pracuje bez przerwy.'}
+];
+const ZONES = [
+  {id:'mlsur', name:'Młyny surowca', w:2},{id:'piec', name:'Piec 1'},
+  {id:'piec2', name:'Piec 2'},{id:'chl', name:'Chłodnik'},{id:'silo', name:'Silosy'},
+  {id:'spr', name:'Sprężarkownia', w:2},{id:'pak', name:'Pakownia'},
+  {id:'mlcem', name:'Młyny cementu', w:2},{id:'kam', name:'Kamieniołom'},
+  {id:'wars', name:'Warsztat utrzymania ruchu', w:3}
+];
+const POST_ROWS = [
+  {name:'Sprężarka rezerwowa nr 3', d:'bieg jałowy · 18 kW', kw:18},
+  {name:'Przenośnik T‑12', d:'praca na pusto · 22 kW', kw:22},
+  {name:'Wentylator wyciągowy W‑4', d:'nieczynna strefa · 12 kW', kw:12},
+  {name:'Nagrzewnica w kontenerze socjalnym', d:'nikt nie pracuje · 6 kW', kw:6}
+];
+const VOTE_OPTS = [
+  {id:'kawa', name:'Ekspres do kawy na socjal', v:40},
+  {id:'premia', name:'Premia dla zmiany (etap 2)', v:22},
+  {id:'klub', name:'Wsparcie klubu Warta Działoszyn', v:24},
+  {id:'drzewa', name:'Nasadzenia drzew przy zakładzie', v:14}
+];
+const DEPTS = [ // % spadku zużycia energii wobec własnego stanu sprzed pilotażu (dane przykładowe)
+  {name:'Młyny cementu', v:6.8},{name:'Sprężarkownia', v:5.9},{name:'Młyny surowca', v:4.1},{name:'Pakownia', v:3.2},{name:'Piec i chłodnik', v:1.7}
+];
+
+/* ---------- stan (z bezpiecznym zapisem w przeglądarce) ---------- */
+const DEF = {photo:null, zone:null, hint:null, cat:null, size:null, reports:[], pig:1724.40, pigGoal:2400, vote:null, post:[], postDone:null, seq:146};
+let S = load();
+function load(){ try{ const j = JSON.parse(localStorage.getItem('ep_state')||'null'); return Object.assign({}, DEF, j||{}); }catch(e){ return Object.assign({}, DEF); } }
+function save(){ try{ const c = Object.assign({}, S); c.photo = null; localStorage.setItem('ep_state', JSON.stringify(c)); }catch(e){} }
+
+/* ---------- pomocnicze ---------- */
+const $ = s => document.querySelector(s);
+const fmt = (x, d=0) => Number(x).toLocaleString('pl-PL',{minimumFractionDigits:d, maximumFractionDigits:d});
+const zl = (x) => x >= 10000 ? fmt(x/1000,1)+' tys. zł' : fmt(x, x<100?2:0)+' zł';
+const zl2 = (x) => fmt(x,2)+' zł';
+function toast(t){ const el=$('#toast'); el.textContent=t; el.classList.add('on'); clearTimeout(toast.t); toast.t=setTimeout(()=>el.classList.remove('on'),2200); }
+function vibrate(){ try{ navigator.vibrate && navigator.vibrate(18); }catch(e){} }
+
+/* Wycena zgłoszenia: kW, kWh/rok, zł/rok, t CO2/rok (szacunek) */
+function estimate(catId, size){
+  const c = CATS.find(x=>x.id===catId); if(!c || size==null) return null;
+  if(c.kw){ const kw=c.kw[size], kwh=kw*c.h; return {kw, kwh, zl:kwh*CFG.PRICE, t:kwh*CFG.CO2/1000, energy:true}; }
+  if(c.m3h){ const m3=c.m3h[size]*c.h; return {m3, zl:m3*CFG.WATER_PRICE, t:0, water:true}; }
+  return {none:true};
+}
+
+/* ---------- router ---------- */
+let route = 'home', sub = null;
+function go(r, s){ route=r; sub=s||null; render(); window.scrollTo(0,0); }
+document.querySelectorAll('nav.tabs button').forEach(b=>b.addEventListener('click',()=>{ vibrate(); go(b.dataset.tab); }));
+$('#backBtn').addEventListener('click',()=>{ vibrate(); go('home'); });
+
+function header(title, subtitle, back, pill){
+  $('#hTitle').textContent=title; $('#hSub').textContent=subtitle||'';
+  $('#backBtn').classList.toggle('hidden',!back); $('#hPill').textContent = pill || 'Jan K.';
+  document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.toggle('on', b.dataset.tab===route || (route==='report'||route==='status') && b.dataset.tab==='home'));
+}
+
+function render(){
+  const v = $('#view');
+  if(route==='home') return renderHome(v);
+  if(route==='report') return renderReport(v);
+  if(route==='sent') return renderSent(v);
+  if(route==='status') return renderStatus(v);
+  if(route==='impact') return renderImpact(v);
+  if(route==='pig') return renderPig(v);
+  if(route==='post') return renderPost(v);
+}
+
+/* ---------- START ---------- */
+function renderHome(v){
+  header('EnergoPatrol','Cementownia Warta · Zmiana B',false);
+  const tot = totals();
+  const open = S.reports.filter(r=>r.status!=='fixed').length;
+  v.innerHTML = `
+  <section class="hero">
+    <div class="appic"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#1E3E72" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 3 5 14h6l-1 7 8-11h-6z" fill="#82C63F"/></svg></div>
+    <h2>Słyszysz syk? Widzisz pył?</h2>
+    <p>Zrób zdjęcie. Trzy dotknięcia, zero pisania.<br>Po naprawie dowiesz się, ile to dało.</p>
+    <button class="big green" id="startBtn" style="margin-top:6px"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>Zgłoś stratę</button>
+  </section>
+  <div class="tiles">
+    <button class="tile" data-go="impact"><span>Twój wpływ</span><b>${fmt(tot.t,2)} t CO₂</b><span>${zl(tot.zl)} · szacunek</span></button>
+    <button class="tile" data-go="pig"><span>Skarbonka zmiany B</span><b>${zl2(S.pig)}</b><span>głosowanie do piątku</span></button>
+  </div>
+  ${open?`<button class="card" data-go="status" style="text-align:left;width:100%"><div class="ct">Twoje zgłoszenia w toku<span class="tag">${open}</span></div><div style="font-weight:700">Sprawdź status →</div></button>`:''}
+  <p class="demo-note">Prototyp · dane przykładowe · wszystkie wartości to szacunki<br>
+  <a href="#telebim" style="color:var(--navy);font-weight:700">Telebim</a> · <a href="#symulator" style="color:var(--navy);font-weight:700">Symulator KPI</a> · <button id="resetBtn" style="color:var(--navy);font-weight:700;font-size:13px;text-decoration:underline">Reset demo</button></p>`;
+  $('#startBtn').onclick=()=>{ vibrate(); Object.assign(S,{photo:null,zone:S.hint||null,cat:null,size:null}); go('report'); };
+  v.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>go(b.dataset.go));
+  $('#resetBtn').onclick=()=>{ try{localStorage.removeItem('ep_state');}catch(e){} S=load(); applyQR(); toast('Demo zresetowane'); render(); };
+}
+
+/* ---------- ZGŁOSZENIE: zdjęcie → gdzie → co → wyślij ---------- */
+function renderReport(v){
+  header('Nowe zgłoszenie', 'Wybierz opcje – bez pisania', true, S.qr||'EP‑'+String(S.seq+1).padStart(4,'0'));
+  const c = CATS.find(x=>x.id===S.cat);
+  const e = estimate(S.cat, S.size);
+  const ready = S.zone && S.cat && (S.size!=null);
+  v.innerHTML = `
+  <section class="card">
+    <div class="step ${S.photo?'done':''}"><i>${S.photo?'✓':'1'}</i>Zrób zdjęcie</div>
+    <div class="photo-row">
+      <label class="photo-btn"><input type="file" accept="image/*" capture="environment" id="cam" aria-label="Zrób zdjęcie">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>${S.photo?'Zmień zdjęcie':'Otwórz aparat'}</label>
+      ${S.photo?`<img class="thumb pop" src="${S.photo}" alt="Twoje zdjęcie">`:''}
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="step ${S.zone?'done':''}"><i>${S.zone?'✓':'2'}</i>Gdzie? ${S.hint&&!S.zone?'<span class="tag good">podpowiedź</span>':''}</div>
+    <div class="map" role="group" aria-label="Strefy zakładu">
+      ${ZONES.map(z=>`<button class="zone ${z.w===2?'w2':z.w===3?'w3':''} ${S.zone===z.id?'sel':''} ${S.hint===z.id&&S.zone!==z.id?'hint':''}" data-zone="${z.id}">${z.name}</button>`).join('')}
+    </div>
+    <div class="loc"><button id="locBtn">📍 Moja lokalizacja</button><span id="locTxt">${S.locTxt||'Lokalizacja tylko w chwili zgłoszenia, bez śledzenia.'}</span></div>
+  </section>
+
+  <section class="card">
+    <div class="step ${S.cat?'done':''}"><i>${S.cat?'✓':'3'}</i>Co?</div>
+    <div class="chips three">
+      ${CATS.map(x=>`<button class="chip ${S.cat===x.id?'sel':''}" data-cat="${x.id}"><span class="ico" aria-hidden="true">${x.ico}</span>${x.name}</button>`).join('')}
+    </div>
+    ${c?`<div class="ct" style="margin:14px 0 8px">Jak duże?</div>
+    <div class="chips three">${c.sizes.map((s,i)=>`<button class="chip ${S.size===i?'sel':''}" data-size="${i}">${s}</button>`).join('')}</div>`:''}
+  </section>
+
+  ${e?`<section class="est pop">
+    <div class="lbl">Szacowana strata <span class="tag">szacunek</span></div>
+    ${e.energy?`<div class="vals"><strong>≈ ${fmt(e.kw,1)} kW</strong><strong>${zl(e.zl)}/rok</strong><strong>${fmt(e.t,1)} t CO₂/rok</strong></div>`:''}
+    ${e.water?`<div class="vals"><strong>≈ ${fmt(e.m3,0)} m³/rok</strong><strong>${zl(e.zl)}/rok</strong></div>`:''}
+    ${e.none?`<div class="vals"><strong>Wartość oceni utrzymanie ruchu</strong></div>`:''}
+  </section>`:''}
+
+  <button class="big green" id="sendBtn" ${ready?'':'disabled'}>Wyślij zgłoszenie</button>
+  <p class="demo-note">${ready?'Trafi do utrzymania ruchu ze zdjęciem i strefą.':'Wybierz strefę, rodzaj i wielkość.'}</p>`;
+
+  $('#cam').onchange = ev => { const f=ev.target.files&&ev.target.files[0]; if(!f) return;
+    const r=new FileReader(); r.onload=()=>{ S.photo=r.result; vibrate(); renderReport(v); }; r.readAsDataURL(f); };
+  v.querySelectorAll('[data-zone]').forEach(b=>b.onclick=()=>{ vibrate(); S.zone=b.dataset.zone; renderReport(v); });
+  v.querySelectorAll('[data-cat]').forEach(b=>b.onclick=()=>{ vibrate(); if(S.cat!==b.dataset.cat){S.size=null;} S.cat=b.dataset.cat; renderReport(v); });
+  v.querySelectorAll('[data-size]').forEach(b=>b.onclick=()=>{ vibrate(); S.size=+b.dataset.size; renderReport(v); setTimeout(()=>{ const s=$('#sendBtn'); s&&s.scrollIntoView({behavior:'smooth',block:'center'}); },60); });
+  $('#locBtn').onclick = locate;
+  $('#sendBtn').onclick = send;
+}
+
+/* Lokalizacja przybliżona: tylko w chwili zgłoszenia. Na pokazie (poza zakładem) podpowiada Sprężarkownię. */
+function locate(){
+  vibrate();
+  const done = (txt)=>{ S.hint='spr'; S.zone='spr'; S.locTxt=txt; renderReport($('#view')); toast('Podpowiedź: Sprężarkownia. Zmień, jeśli trzeba.'); };
+  if(!navigator.geolocation){ return done('Podpowiedziano najbliższą strefę (tryb demo).'); }
+  $('#locTxt').textContent='Szukam…';
+  navigator.geolocation.getCurrentPosition(
+    p=>done(`Dokładność ok. ${Math.round(p.coords.accuracy)} m · najbliższa strefa (tryb demo).`),
+    ()=>done('Brak zgody na lokalizację – wybierz strefę z mapy.'),
+    {enableHighAccuracy:false, timeout:6000, maximumAge:60000});
+}
+
+function send(){
+  vibrate();
+  S.seq++;
+  const id = S.qr || ('EP‑'+String(S.seq).padStart(4,'0'));
+  const e = estimate(S.cat,S.size) || {};
+  S.reports.unshift({id, n:S.seq, zone:S.zone, cat:S.cat, size:S.size, est:e, status:'new', ts:Date.now()});
+  S.qr=null; save(); go('sent');
+}
+
+function renderSent(v){
+  const r = S.reports[0];
+  header('Zgłoszenie #'+r.n, zoneName(r.zone), false);
+  v.innerHTML = `
+  <section class="card ok">
+    <svg class="ck pop" viewBox="0 0 84 84"><circle cx="42" cy="42" r="42"/><path d="M25 43l12 12 23-25"/></svg>
+    <h2>Dziękujemy, ${firstName()}!</h2>
+    <p>Utrzymanie ruchu dostało zgłoszenie ze zdjęciem i strefą. Odpowiedź w ciągu 24 h.</p>
+  </section>
+  <button class="big navy" id="toStatus">Zobacz status</button>
+  <button class="big ghost" id="toHome">Wróć na start</button>`;
+  $('#toStatus').onclick=()=>go('status');
+  $('#toHome').onclick=()=>go('home');
+}
+
+/* ---------- STATUS (+ symulacja potwierdzenia przez UR) ---------- */
+function renderStatus(v){
+  const r = S.reports[0];
+  if(!r){ header('Status','Brak zgłoszeń',true); v.innerHTML='<p class="demo-note">Nie masz jeszcze zgłoszeń.</p>'; return; }
+  header('Zgłoszenie #'+r.n, zoneName(r.zone)+' · '+catName(r.cat), true);
+  const st = r.status;
+  v.innerHTML = `
+  <section class="card">
+    <ol class="tl">
+      <li class="done"><span class="dot">✓</span><div><b>Przyjęte</b><span>Utrzymanie ruchu dostało powiadomienie</span></div></li>
+      <li class="${st==='fixed'?'done':'now'}"><span class="dot">${st==='fixed'?'✓':''}</span><div><b>W naprawie</b><span>${st==='fixed'?'Brygada UR na miejscu':'Czekamy na brygadę UR'}</span></div></li>
+      <li class="${st==='fixed'?'done':''}"><span class="dot">${st==='fixed'?'✓':''}</span><div><b>Naprawa potwierdzona</b><span>${st==='fixed'?'Czas reakcji 18 h · wycena: '+(r.measured?'pomiar':'szacunek (tabela DOE)'):'UR potwierdzi usunięcie straty'}</span></div></li>
+    </ol>
+  </section>
+  ${st==='fixed'
+    ? `<button class="big green" id="seeImpact">Zobacz, ile zaoszczędziłeś</button>`
+    : `<button class="demo-btn" id="simFix">▶ Demo: UR potwierdza naprawę</button>
+       <p class="demo-note">W prawdziwym systemie potwierdza to utrzymanie ruchu w swoim panelu.</p>`}`;
+  const sf=$('#simFix'); if(sf) sf.onclick=()=>{ vibrate(); fix(r); };
+  const si=$('#seeImpact'); if(si) si.onclick=()=>go('impact');
+}
+
+/* Po potwierdzeniu: wartość liczona dopiero teraz (nie po samym zdjęciu) i 20% do skarbonki po weryfikacji */
+function fix(r){
+  r.status='fixed'; r.fixedAt=Date.now();
+  const week = r.est && r.est.kw ? r.est.kw*24*7*CFG.PRICE : 0; // pierwsze 7 dni po naprawie
+  r.pigAdd = Math.round(Math.round(week)*CFG.POOL*100)/100;
+  S.pig = Math.round((S.pig + r.pigAdd)*100)/100;
+  save(); toast('Naprawa potwierdzona ✓'); renderStatus($('#view'));
+}
+
+/* ---------- MÓJ WPŁYW ---------- */
+function totals(){
+  let kwh=0, zlv=0, t=0, n=0;
+  S.reports.filter(r=>r.status==='fixed').forEach(r=>{ n++; if(r.est){ kwh+=r.est.kwh||0; zlv+=r.est.zl||0; t+=r.est.t||0; } });
+  return {kwh, zl:zlv, t, n};
+}
+function renderImpact(v){
+  header('Twój wpływ','Zmiana B · widzisz tylko Ty',false);
+  const last = S.reports.find(r=>r.status==='fixed');
+  const tot = totals();
+  if(!last){
+    v.innerHTML = `<section class="card"><div class="hello"><div class="av">JK</div><div><b style="font-size:20px">Cześć, ${firstName()}!</b><div style="color:var(--muted)">Tu zobaczysz efekt swoich zgłoszeń po naprawie.</div></div></div></section>
+    <button class="big green" id="g">Zgłoś pierwszą stratę</button>`;
+    $('#g').onclick=()=>go('home'); return;
+  }
+  const e = last.est||{}; const c = CATS.find(x=>x.id===last.cat);
+  const h7 = e.kw ? e.kw*24*7 : 0; // 7 dni pracy ciągłej po naprawie
+  const wk = {kwh:h7, zl:h7*CFG.PRICE, t:h7*CFG.CO2/1000};
+  const months = wk.kwh / CFG.HOUSE_KWH_MONTH;
+  v.innerHTML = `
+  <section class="card"><div class="hello"><div class="av">JK</div><div><b style="font-size:20px">Cześć, ${firstName()}!</b><div style="color:var(--muted)">Dzięki Twojej uważności zakład traci mniej.</div></div></div></section>
+  <section class="card">
+    <div class="ct">Zgłoszenie #${last.n} · pierwsze 7 dni po naprawie <span class="tag">szacunek</span></div>
+    ${e.energy?`<div class="stats">
+      <div><b data-count="${wk.kwh}" data-d="0">0</b><span>kWh</span></div>
+      <div><b data-count="${wk.zl}" data-d="0">0</b><span>zł</span></div>
+      <div><b data-count="${wk.t}" data-d="2">0</b><span>t CO₂</span></div></div>
+    <div class="cmp"><span class="ico">🏡</span>Tyle prądu zużywa dom na wsi przez ok. ${fmt(Math.max(1,months),0)} ${plMonths(months)}.</div>
+    <div class="scale">W skali roku: ok. ${zl(e.zl)} i ${fmt(e.t,1)} t CO₂. To ok. ${fmt(e.t/1463000*100,4)}% emisji zakładu – większość CO₂ pochodzi z wapienia w piecu, Twój wpływ to energia.</div>`
+    : `<div class="edu">Naprawione. ${e.water?`Ok. ${fmt(e.m3,0)} m³ wody rocznie mniej (szacunek).`:'Efekt oceni utrzymanie ruchu.'}</div>`}
+  </section>
+  ${last.pigAdd?`<section class="card"><div class="ct">Skarbonka zmiany B<span class="tag good">po weryfikacji UR</span></div>
+    <div class="pig"><b>${zl2(S.pig)}</b><span style="color:var(--green-d);font-weight:800">+${zl2(last.pigAdd)}</span></div>
+    <div class="rules">20% zweryfikowanej oszczędności z Twojej naprawy trafia do wspólnej puli zmiany, nie do jednej osoby.</div></section>`:''}
+  <section class="card"><div class="ct">Dlaczego to ważne</div><div class="edu">${c?c.edu:''}</div></section>
+  <section class="card"><div class="ct">Razem: ${tot.n} ${tot.n===1?'naprawa':'naprawy'}</div>
+    <div class="stats"><div><b>${fmt(tot.kwh/1000,1)}</b><span>MWh/rok</span></div><div><b>${fmt(tot.zl/1000,1)}</b><span>tys. zł/rok</span></div><div><b>${fmt(tot.t,1)}</b><span>t CO₂/rok</span></div></div></section>`;
+  countUp(v);
+}
+
+/* ---------- SKARBONKA I GŁOSOWANIE ---------- */
+function renderPig(v){
+  header('Skarbonka zmiany B','Głosowanie do piątku',false);
+  const pct = Math.min(100, S.pig/S.pigGoal*100);
+  const opts = VOTE_OPTS.map(o=>({...o, v:o.v + (S.vote===o.id?3:0)}));
+  const sum = opts.reduce((a,o)=>a+o.v,0);
+  v.innerHTML = `
+  <section class="card">
+    <div class="ct">Budżet zmiany<span class="tag good">po weryfikacji</span></div>
+    <div class="pig"><b>${zl2(S.pig)}</b><span style="color:var(--muted);font-weight:700">cel ${zl(S.pigGoal)}</span></div>
+    <div class="bar"><i style="width:${pct}%"></i></div>
+    <div class="rules">Do skarbonki trafia 20% oszczędności z napraw potwierdzonych przez utrzymanie ruchu (propozycja, szacunek). Bez kar, bez rankingu osób.</div>
+  </section>
+  <section class="card">
+    <div class="ct">Na co przeznaczymy budżet?</div>
+    ${opts.map(o=>`<button class="vote ${S.vote===o.id?'sel':''}" data-vote="${o.id}"><div class="top"><span>${o.name}</span><span>${Math.round(o.v/sum*100)}%</span></div><div class="bar"><i style="width:${o.v/sum*100}%"></i></div></button>`).join('')}
+    <div class="rules">Jeden głos na osobę. Zasady jawne, wynik widzi cała zmiana.</div>
+  </section>`;
+  v.querySelectorAll('[data-vote]').forEach(b=>b.onclick=()=>{ vibrate(); S.vote=b.dataset.vote; save(); toast('Twój głos oddany ✓'); renderPig(v); });
+}
+
+/* ---------- POSTÓJ (brygadzista) ---------- */
+function renderPost(v){
+  header('Postój 48 h','Weekend · zmiana B · brygadzista',false,'A. Nowak');
+  const H=48;
+  let kwh=0; S.post.forEach(i=>kwh+=POST_ROWS[i].kw*H);
+  const zlv=kwh*CFG.PRICE, t=kwh*CFG.CO2/1000;
+  const flights = t/0.42;
+  if(S.postDone){
+    v.innerHTML = `<section class="card ok"><svg class="ck pop" viewBox="0 0 84 84"><circle cx="42" cy="42" r="42"/><path d="M25 43l12 12 23-25"/></svg>
+      <h2>Postój zatwierdzony</h2><p>Oszczędność w czasie 48 h postoju <span class="tag">szacunek</span></p></section>
+      <section class="card"><div class="stats"><div><b>${fmt(S.postDone.kwh)}</b><span>kWh</span></div><div><b>${fmt(S.postDone.zl)}</b><span>zł</span></div><div><b>${fmt(S.postDone.t,2)}</b><span>t CO₂</span></div></div>
+      <div class="cmp"><span class="ico">✈️</span>Jak ok. ${fmt(Math.max(1,S.postDone.t/0.42),0)} lotów Warszawa–Londyn w obie strony (szacunek).</div></section>
+      <button class="big ghost" id="again">Nowy postój</button>`;
+    $('#again').onclick=()=>{ S.post=[]; S.postDone=null; save(); renderPost(v); };
+    return;
+  }
+  v.innerHTML = `
+  <section class="card"><div class="ct">Przed postojem wyłącz<span class="tag">${S.post.length}/${POST_ROWS.length}</span></div>
+    ${POST_ROWS.map((r,i)=>{ const on=S.post.includes(i); const k=r.kw*H;
+      return `<button class="row ${on?'on':''}" data-row="${i}" aria-pressed="${on}"><span class="box">${on?'✓':''}</span><span class="t"><b>${r.name}</b><span>${r.d} · ${H} h</span></span><span class="v">${on?'+':''}${fmt(k)} kWh<br>${zl(k*CFG.PRICE)}</span></button>`; }).join('')}
+  </section>
+  <section class="est sum"><div class="lbl">Razem w czasie postoju <span class="tag">szacunek</span></div>
+    <div class="vals"><strong>${fmt(kwh)} kWh</strong><strong>${zl(zlv)}</strong><strong>${fmt(t,2)} t CO₂</strong></div></section>
+  <button class="big green" id="okPost" ${S.post.length?'':'disabled'}>Zatwierdź postój</button>`;
+  v.querySelectorAll('[data-row]').forEach(b=>b.onclick=()=>{ vibrate(); const i=+b.dataset.row; S.post = S.post.includes(i)? S.post.filter(x=>x!==i) : S.post.concat(i); save(); renderPost(v); });
+  $('#okPost').onclick=()=>{ vibrate(); S.postDone={kwh,zl:zlv,t}; save(); renderPost(v); };
+}
+
+/* ---------- drobiazgi ---------- */
+function zoneName(id){ const z=ZONES.find(x=>x.id===id); return z?z.name:'—'; }
+function catName(id){ const c=CATS.find(x=>x.id===id); return c?c.name:'—'; }
+function firstName(){ return 'Jan'; }
+function plMonths(m){ const n=Math.round(m); if(n===1) return 'miesiąc'; if(n%10>=2&&n%10<=4&&(n%100<10||n%100>=20)) return 'miesiące'; return 'miesięcy'; }
+function countUp(root){
+  root.querySelectorAll('[data-count]').forEach(el=>{
+    const to=+el.dataset.count, d=+el.dataset.d||0, t0=performance.now(), dur=1100;
+    const step=now=>{ const k=Math.min(1,(now-t0)/dur), e=1-Math.pow(1-k,3); el.textContent=fmt(to*e,d); if(k<1) requestAnimationFrame(step); };
+    requestAnimationFrame(step);
+  });
+}
+
+/* ---------- kod QR na zawieszce: ?ep=EP-0147&z=spr ---------- */
+function applyQR(){
+  const q=new URLSearchParams(location.search);
+  if(q.get('ep')){ S.qr=q.get('ep'); S.hint=q.get('z')||'spr'; S.zone=S.hint; S.locTxt='Kod '+S.qr+' rozpoznany – strefa z zawieszki.'; }
+}
+
+/* ===================== TELEBIM ===================== */
+function renderTV(){
+  const tot = totals();
+  const base = {mwh:38.4, t:23.0, zl:30720, n:27}; // miesiąc do dziś, dane przykładowe
+  const mwh = base.mwh + tot.kwh/1000*30/365, tt = base.t + tot.t*30/365, zz = base.zl + tot.zl*30/365, nn = base.n + tot.n;
+  const goal = 60; // cel miesiąca MWh (przykład)
+  const last = S.reports.find(r=>r.status==='fixed');
+  const pct = Math.min(100, S.pig/S.pigGoal*100);
+  const maxD = Math.max(...DEPTS.map(d=>d.v));
+  const d = new Date();
+  $('#tv').innerHTML = `
+  <div class="tvh"><div><h1>Energo<em>Patrol</em> · Cementownia Warta</h1><p>Wyniki naprawionych strat · ${d.toLocaleDateString('pl-PL',{day:'numeric',month:'long',year:'numeric'})}</p></div>
+    <div class="pill" style="font-size:clamp(13px,1.2vw,17px)">Dane przykładowe · szacunek</div></div>
+  <div class="tvg">
+    <section class="tvc span8"><h3>Cel miesiąca: ${goal} MWh oszczędności</h3>
+      <div class="kpi">${fmt(mwh,1)}<small>MWh</small></div>
+      <div class="bar"><i style="width:${Math.min(100,mwh/goal*100)}%"></i></div>
+      <div style="display:flex;gap:28px;flex-wrap:wrap;font-weight:700;font-size:clamp(15px,1.5vw,22px)"><span>${fmt(tt,1)} t CO₂ mniej</span><span>${zl(zz)}</span><span>${nn} naprawionych strat</span></div>
+    </section>
+    <section class="tvc span4"><h3>Strata tygodnia</h3>
+      <div style="font-size:clamp(20px,2.2vw,32px);font-weight:800;line-height:1.15">${last?catName(last.cat)+' · '+zoneName(last.zone):'Wyciek powietrza · Sprężarkownia'}</div>
+      <div style="opacity:.85;font-size:clamp(14px,1.3vw,19px)">${last&&last.est&&last.est.zl?'ok. '+zl(last.est.zl)+'/rok · '+fmt(last.est.t,1)+' t CO₂/rok':'ok. 27,5 tys. zł/rok · 20,6 t CO₂/rok'}</div>
+      <div style="margin-top:auto;font-weight:700;color:var(--green)">Dziękujemy, Jan ze zmiany B!</div>
+    </section>
+    <section class="tvc span6"><h3>Ranking wydziałów · spadek zużycia energii</h3>
+      <div class="rank">${DEPTS.map(x=>`<div><span>${x.name}</span><span class="bar"><i style="width:${x.v/maxD*100}%"></i></span><span>${fmt(x.v,1)}%</span></div>`).join('')}</div>
+      <div style="opacity:.6;font-size:13px">Pomiar z liczników wobec stanu sprzed pilotażu. Bez rankingu osób i zmian.</div>
+    </section>
+    <section class="tvc span6"><h3>Skarbonka zmiany B</h3>
+      <div class="kpi">${zl2(S.pig)}</div>
+      <div class="bar"><i style="width:${pct}%"></i></div>
+      <div style="font-weight:700;font-size:clamp(15px,1.5vw,22px)">Do ekspresu na socjal brakuje ${fmt(100-pct,0)}%</div>
+    </section>
+  </div>
+  <div class="tvfoot"><span>Zgłoś stratę: zeskanuj kod QR na zawieszce przy maszynie</span><span>eFn · Innovation Hack #BudujemyBezpieczneJutro</span></div>`;
+}
+
+/* ===================== SYMULATOR KPI ===================== */
+function renderSim(){
+  $('#sim').innerHTML = `
+  <h1 style="font-size:26px;font-weight:800;color:var(--navy)">Symulator KPI pilotażu</h1>
+  <p style="color:var(--muted)">1 wydział · wszystkie wyniki to szacunki na parametrach przykładowych</p>
+  <section class="card" style="display:flex;flex-direction:column;gap:14px">
+    <div class="sl"><label>Zgłoszenia miesięcznie <output id="oN"></output></label><input type="range" id="sN" min="1" max="50" value="3"></div>
+    <div class="sl"><label>Odsetek naprawionych <output id="oP"></output></label><input type="range" id="sP" min="50" max="100" value="70" step="5"></div>
+    <div class="sl"><label>Cena prądu <output id="oC"></output></label><input type="range" id="sC" min="0.4" max="1.2" value="${CFG.PRICE}" step="0.05"></div>
+    <div class="sl"><label>Średnia strata na naprawę <output id="oE"></output></label><input type="range" id="sE" min="2" max="30" value="6" step="1"></div>
+  </section>
+  <div class="res">
+    <div><b id="rM">–</b><span>MWh/rok</span></div>
+    <div><b id="rZ">–</b><span>zł/rok</span></div>
+    <div><b id="rT">–</b><span>t CO₂/rok</span></div>
+    <div><b id="rPool">–</b><span>skarbonka 20%/rok</span></div>
+    <div style="grid-column:span 2"><b id="rPay">–</b><span>zwrot pilotażu (koszt 30–50 tys. zł, szacunek)</span></div>
+  </div>
+  <p style="font-size:14px;color:var(--muted)">Energia [MWh/rok] = zgłoszenia/mies. × 12 × odsetek napraw × średnia strata. CO₂ = MWh × ${String(CFG.CO2).replace('.',',')} t/MWh. Górną granicę wyznacza całkowite zużycie sprężarkowni (do potwierdzenia z Wartą).</p>
+  <div class="linkrow"><a href="#">← Aplikacja</a><a href="#telebim">Telebim</a></div>`;
+  const upd=()=>{
+    const N=+$('#sN').value, P=+$('#sP').value/100, C=+$('#sC').value, E=+$('#sE').value;
+    $('#oN').textContent=N; $('#oP').textContent=Math.round(P*100)+'%'; $('#oC').textContent=fmt(C*1000)+' zł/MWh'; $('#oE').textContent=E+' MWh/rok';
+    const mwh=N*12*P*E, z=mwh*1000*C, t=mwh*CFG.CO2;
+    $('#rM').textContent=fmt(mwh); $('#rZ').textContent=zl(z); $('#rT').textContent=fmt(t); $('#rPool').textContent=zl(z*CFG.POOL);
+    const m1=30000/(z/12), m2=50000/(z/12);
+    $('#rPay').textContent= z>0 ? `ok. ${fmt(m1,1)}–${fmt(m2,1)} mies.` : '–';
+  };
+  ['sN','sP','sC','sE'].forEach(id=>$('#'+id).addEventListener('input',upd)); upd();
+}
+
+/* ===================== start ===================== */
+function screen(){
+  const h=location.hash.replace('#','');
+  $('#app').classList.toggle('hidden', h==='telebim'||h==='symulator');
+  $('#tv').classList.toggle('hidden', h!=='telebim');
+  $('#sim').classList.toggle('hidden', h!=='symulator');
+  document.body.style.background = h==='symulator' ? 'var(--paper)' : 'var(--deep)';
+  if(h==='telebim') renderTV(); else if(h==='symulator') renderSim(); else render();
+}
+window.addEventListener('hashchange', screen);
+window.addEventListener('storage', ()=>{ S=load(); if(location.hash==='#telebim') renderTV(); });
+applyQR();
+if(S.qr){ route='report'; }
+screen();
+</script>
+</body>
+</html>
