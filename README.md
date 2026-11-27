@@ -12,13 +12,13 @@ Jeden plik `index.html`, bez instalacji, zaprojektowany pod telefon.
 
 | Adres | Ekran |
 | --- | --- |
-| `index.html` | aplikacja pracownika: zgłoszenie (zdjęcie → strefa → rodzaj i wielkość), status, mój wpływ, skarbonka z głosowaniem, checklista postoju dla brygadzisty |
-| `index.html?ep=EP-0147&z=spr` | wejście z kodu QR na zawieszce przy maszynie (strefa podpowiedziana) |
-| `index.html#telebim` | telebim zakładu: cel miesiąca, strata tygodnia, ranking wydziałów, skarbonka |
-| `index.html#symulator` | symulator KPI pilotażu z suwakami |
+| `index.html` | **demo 1:1 z animacją**: ekran telefonu → aparat → zgłoszenie z mapą i kategorią → utrzymanie ruchu potwierdza naprawę → Twój wpływ i głosowanie → ranking (osoby, zmiany, cała firma) → wyłączanie urządzeń na postój |
 | `animacja.html` | animacja pokazowa (ok. 50 s) do prezentacji |
+| `panel.html` | wcześniejszy prototyp (aplikacja z mapą zakładu) |
+| `panel.html#telebim` | telebim zakładu: cel miesiąca, strata tygodnia, ranking wydziałów, skarbonka |
+| `panel.html#symulator` | symulator KPI pilotażu z suwakami |
 
-Na pokazie przycisk **„Demo: UR potwierdza naprawę”** zastępuje panel utrzymania ruchu. Stan zapisuje się w przeglądarce. **„Reset demo”** na ekranie startowym czyści dane.
+Na telefonie demo wypełnia cały ekran; na komputerze pokazuje się w ramce telefonu (przycisk „Od nowa” w rogu). Naprawę przez utrzymanie ruchu demo symuluje samo po kilku sekundach.
 
 ## Uruchomienie
 - Lokalnie: otwórz `index.html` w przeglądarce.
