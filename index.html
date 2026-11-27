@@ -63,21 +63,32 @@ nav.tabs button.on{color:var(--navy);background:#EEF2F8}
 .thumb{width:64px;height:64px;border-radius:14px;object-fit:cover;flex:none;background:#EEF2F8}
 
 /* mapa stref */
-.plant{display:block;width:100%;height:auto;border-radius:14px;border:1px solid var(--line);overflow:hidden;touch-action:manipulation}
+.mapwrap{overflow-x:auto;overflow-y:hidden;border-radius:14px;border:1px solid var(--line);-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.mapwrap::-webkit-scrollbar{display:none}
+.plant{display:block;height:auto;max-width:none;touch-action:pan-x}
+.plant .yard{fill:#F3F6F9;stroke:#C9D3DE;stroke-width:3;stroke-dasharray:10 8}
+.plant .road path{fill:none;stroke:#fff;stroke-width:18;stroke-linecap:round;stroke-linejoin:round}
+.plant .rail path{fill:none;stroke:#98A4B3;stroke-width:3}
+.plant .rail .ties{stroke-width:14;stroke-dasharray:3 14}
+.plant .pvg rect{fill:#C3CEDB}
+.plant .deco{fill:#E3E9F0;stroke:#C2CCD8;stroke-width:2}
+.plant .ext{font:600 24px 'Open Sans',system-ui,sans-serif;fill:#8A96A6}
 .plant .mz{cursor:pointer}
-.plant .plot{fill:#EEF2F8;stroke:none;transition:fill .2s}
-.plant .bld{fill:#D6DEE8;stroke:#AEB9C7;stroke-width:1.2;transition:fill .2s,stroke .2s}
-.plant .bld2{fill:#fff;stroke:#AEB9C7;stroke-width:1}
-.plant .pipe{fill:none;stroke:#4B79B5;stroke-width:2.2;stroke-linecap:round}
-.plant .pv{fill:#C3CEDB}
-.plant .mz text{fill:#44506A;font:700 10px 'Open Sans',system-ui,sans-serif;pointer-events:none}
-.plant .mz.sel .plot{fill:#DCE7F7}
+.plant .hit{fill:transparent}
+.plant .bld{fill:#D3DCE7;stroke:#9EABBB;stroke-width:2.5;transition:fill .2s,stroke .2s}
+.plant .mz.dark .bld{fill:#AEB8C5}
+.plant .mz text{font:700 28px 'Open Sans',system-ui,sans-serif;fill:#2F3B4E;paint-order:stroke;stroke:#F3F6F9;stroke-width:6px;stroke-linejoin:round}
+.plant .mz text.in{stroke:#D3DCE7}
 .plant .mz.sel .bld{fill:var(--navy);stroke:var(--navy)}
 .plant .mz.sel text{fill:var(--navy)}
-.plant .mz.sel .pipe{stroke:var(--green)}
-.plant .mz.hint .plot{fill:#E8F4DC}
-.plant .tree{fill:#CDE6B0;pointer-events:none}
-.plant .pin{fill:var(--green);stroke:#fff;stroke-width:2}
+.plant .mz.sel text.in{fill:#fff;stroke:var(--navy)}
+.plant .mz.hint .bld{stroke:var(--green);stroke-width:6}
+.plant .pill{fill:#fff;stroke:#9EABBB;stroke-width:2.5}
+.plant .kam text{stroke:#fff}
+.plant .mz.sel .pill{fill:var(--navy);stroke:var(--navy)}
+.plant .mz.kam.sel text{fill:#fff;stroke:var(--navy)}
+.plant .pin{fill:var(--green);stroke:#fff;stroke-width:5}
+.maphint{font-size:13px;color:var(--muted);margin-top:6px;text-align:center}
 .zone-pick{margin-top:8px;font-size:15px;font-weight:700;color:var(--navy);min-height:22px}
 .map{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
 .zone{min-height:54px;border-radius:12px;background:#EEF2F8;border:2px solid #D3DBE6;font-size:13px;font-weight:700;color:#44506A;display:flex;align-items:center;justify-content:center;text-align:center;padding:4px 6px;line-height:1.15}
@@ -258,11 +269,11 @@ const CATS = [
    edu:'Mniej wody pitnej to jeden z celów środowiskowych Warty. Cieknący zawór pracuje bez przerwy.'}
 ];
 const ZONES = [
-  {id:'mlsur', name:'Młyny surowca', w:2},{id:'piec', name:'Piec 1'},
-  {id:'piec2', name:'Piec 2'},{id:'chl', name:'Chłodnik'},{id:'silo', name:'Silosy'},
-  {id:'spr', name:'Sprężarkownia', w:2},{id:'pak', name:'Pakownia'},
-  {id:'mlcem', name:'Młyny cementu', w:2},{id:'kam', name:'Kamieniołom'},
-  {id:'wars', name:'Warsztat utrzymania ruchu', w:3}
+  {id:'biuro', name:'Biuro i portiernia'},{id:'wars', name:'Warsztat UR'},{id:'mlsur', name:'Młyny surowca'},
+  {id:'piec', name:'Piec 1'},{id:'silo', name:'Silosy'},{id:'paliwa', name:'Skład paliw'},
+  {id:'piec2', name:'Piec 2'},{id:'chl', name:'Chłodnik'},{id:'mag', name:'Hala klinkieru'},
+  {id:'mlcem', name:'Młyny cementu'},{id:'spr', name:'Sprężarkownia'},{id:'pak', name:'Pakownia i ekspedycja'},
+  {id:'kam', name:'Kamieniołom'}
 ];
 const POST_ROWS = [
   {name:'Sprężarka rezerwowa nr 3', d:'bieg jałowy · 18 kW', kw:18},
@@ -344,7 +355,7 @@ function renderHome(v){
   ${open?`<button class="card" data-go="status" style="text-align:left;width:100%"><div class="ct">Twoje zgłoszenia w toku<span class="tag">${open}</span></div><div style="font-weight:700">Sprawdź status →</div></button>`:''}
   <p class="demo-note">Prototyp · dane przykładowe · wszystkie wartości to szacunki<br>
   <a href="#telebim" style="color:var(--navy);font-weight:700">Telebim</a> · <a href="#symulator" style="color:var(--navy);font-weight:700">Symulator KPI</a> · <button id="resetBtn" style="color:var(--navy);font-weight:700;font-size:13px;text-decoration:underline">Reset demo</button></p>`;
-  $('#startBtn').onclick=()=>{ vibrate(); Object.assign(S,{photo:null,zone:S.hint||null,cat:null,size:null}); go('report'); };
+  $('#startBtn').onclick=()=>{ vibrate(); renderReport._sl=null; Object.assign(S,{photo:null,zone:S.hint||null,cat:null,size:null}); go('report'); };
   v.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>go(b.dataset.go));
   $('#resetBtn').onclick=()=>{ try{localStorage.removeItem('ep_state');}catch(e){} S=load(); applyQR(); toast('Demo zresetowane'); render(); };
 }
@@ -397,48 +408,62 @@ function renderReport(v){
   v.querySelectorAll('[data-cat]').forEach(b=>b.onclick=()=>{ vibrate(); if(S.cat!==b.dataset.cat){S.size=null;} S.cat=b.dataset.cat; renderReport(v); });
   v.querySelectorAll('[data-size]').forEach(b=>b.onclick=()=>{ vibrate(); S.size=+b.dataset.size; renderReport(v); setTimeout(()=>{ const s=$('#sendBtn'); s&&s.scrollIntoView({behavior:'smooth',block:'center'}); },60); });
   $('#locBtn').onclick = locate;
+  const _w=document.getElementById('mapwrap'); if(_w){ const keep=renderReport._sl; if(keep!=null && !renderReport._jump){ _w.scrollLeft=keep; } else { scrollMapTo(); } renderReport._jump=false; _w.addEventListener('scroll',()=>{renderReport._sl=_w.scrollLeft;},{passive:true}); }
   $('#sendBtn').onclick = send;
 }
 
 
-/* Mapa Cementowni Warta: kwartały między ulicami, układ wschód–zachód jak na zdjęciu satelitarnym, bocznica od południa */
+/* Mapa Cementowni Warta odrysowana ze zdjęcia satelitarnego (układ budynków orientacyjny).
+   Współrzędne = piksele zdjęcia minus (110,170). Mapa jest szeroka, przewijana palcem w poziomie. */
+const MAPZ = {
+  biuro:{r:[[330,310,120,50],[320,375,80,55]],l:[390,462],c:[385,300]},
+  wars:{r:[[395,510,95,50]],l:[500,545,'start'],c:[442,506]},
+  mlsur:{r:[[540,310,110,85],[600,290,26,30]],l:[540,428,'start'],c:[595,286]},
+  piec:{r:[[710,330,180,22,11],[880,298,32,72]],l:[790,384],c:[800,318]},
+  silo:{o:[[950,250,32],[1012,250,30]],l:[950,320],c:[981,214]},
+  paliwa:{r:[[1010,300,90,75]],l:[1055,406],c:[1055,292],dark:1},
+  piec2:{r:[[1470,160,120,130],[1490,282,260,24,12]],l:[1600,336],c:[1530,150]},
+  chl:{r:[[1752,268,58,74]],l:[1820,312,'start'],c:[1781,258]},
+  mag:{r:[[1435,55,270,85],[1735,55,130,85]],l:[1650,106],c:[1650,48],inside:1},
+  mlcem:{r:[[1590,352,225,40]],l:[1702,378],c:[1702,344],inside:1},
+  spr:{r:[[1380,428,80,40]],l:[1420,416],c:[1420,420]},
+  pak:{r:[[1400,492,150,65]],l:[1475,530],c:[1475,484],inside:1}
+};
 function plantMap(){
-  const cls=id=>`mz ${S.zone===id?'sel':''} ${S.hint===id&&S.zone!==id?'hint':''}`;
-  const blob=(x,y)=>`<circle class="tree" cx="${x}" cy="${y}" r="9"/><circle class="tree" cx="${x+10}" cy="${y+5}" r="7"/>`;
-  const plot=(id,x,y,w,h,inner,label,lx,ly)=>`<g class="${cls(id)}" data-zone="${id}" role="button" aria-label="${zoneName(id)}">
-     <rect class="plot" x="${x}" y="${y}" width="${w}" height="${h}" rx="7"/>${inner}
-     <text x="${lx}" y="${ly}" text-anchor="middle">${label}</text></g>`;
-  const B=(x,y,w,h,rx=4)=>`<rect class="bld" x="${x}" y="${y}" width="${w}" height="${h}" rx="${rx}"/>`;
-  const C=(x,y,r)=>`<circle class="bld" cx="${x}" cy="${y}" r="${r}"/>`;
-  const map={
-    wars: plot('wars',8,8,78,92, B(20,30,54,34)+ [0,1,2,3].map(i=>`<rect class="pv" x="${20+i*14}" y="74" width="10" height="16" rx="2"/>`).join(''),'Warsztat',47,51),
-    mlsur:plot('mlsur',94,8,86,92, B(106,24,62,44),'Młyny surowca',137,86),
-    silo: plot('silo',188,8,74,92, C(205,44,11)+C(225,44,11)+C(245,44,11),'Silosy',225,86),
-    mlcem:plot('mlcem',270,8,82,92, B(280,22,62,26)+B(280,54,62,18),'Młyny cementu',311,88),
-    spr:  plot('spr',8,108,78,90, B(18,122,58,46)+`<rect class="bld2" x="26" y="130" width="16" height="11" rx="2"/><rect class="bld2" x="26" y="148" width="16" height="11" rx="2"/><path class="pipe" d="M42 135h12v18h12M54 144h14"/>`,'Sprężarkownia',47,186),
-    piec: plot('piec',94,108,90,42, B(104,120,64,12,6)+C(174,126,6),'Piec 1',136,146),
-    piec2:plot('piec2',94,156,90,42, B(104,166,64,12,6)+C(174,172,6),'Piec 2',136,193),
-    chl:  plot('chl',192,108,70,90, B(204,122,46,40),'Chłodnik',227,184),
-    pak:  plot('pak',270,108,82,90, B(282,122,58,40),'Pakownia',311,184)
-  };
-  const zs=S.zone||S.hint, pins={wars:[47,30],mlsur:[137,24],silo:[225,33],mlcem:[311,22],spr:[47,122],piec:[136,120],piec2:[136,166],chl:[227,122],pak:[311,122],kam:[318,214]};
-  const pin=zs&&pins[zs]?`<g transform="translate(${pins[zs][0]},${pins[zs][1]-24})"><path class="pin" d="M0 0c-6 0-10 4-10 9 0 7 10 15 10 15s10-8 10-15c0-5-4-9-10-9z"/><circle cx="0" cy="9" r="3.2" fill="#fff"/></g>`:'';
-  return `<svg class="plant" viewBox="0 0 360 232" role="group" aria-label="Mapa zakładu – stuknij budynek">
-    <rect x="0" y="0" width="360" height="232" fill="#FFFFFF"/>
-    ${Object.values(map).join('')}
-    ${blob(10,96)}${blob(176,100)}${blob(258,102)}${blob(10,200)}${blob(340,8)}${blob(176,8)}
-    <rect x="8" y="204" width="344" height="22" rx="7" fill="#EEF2F8"/>
-    <path d="M14 216H262" stroke="#AEB8C5" stroke-width="5" stroke-dasharray="1 5"/><path d="M14 216H262" stroke="#AEB8C5" stroke-width="1.6"/>
-    <text x="20" y="211" style="font:600 7px 'Open Sans',sans-serif;fill:#8A96A6">bocznica</text>
-    <g class="${cls('kam')}" data-zone="kam" role="button" aria-label="Kamieniołom"><rect class="plot" x="270" y="206" width="80" height="18" rx="9"/><text x="310" y="218" text-anchor="middle">Kamieniołom ↗</text></g>
+  const sel=S.zone, hint=S.hint;
+  const zg=(id)=>{ const z=MAPZ[id]; const c=`mz ${sel===id?'sel':''} ${hint===id&&sel!==id?'hint':''} ${z.dark?'dark':''}`;
+    const xs=[],ys=[]; (z.r||[]).forEach(r=>{xs.push(r[0],r[0]+r[2]);ys.push(r[1],r[1]+r[3]);}); (z.o||[]).forEach(o=>{xs.push(o[0]-o[2],o[0]+o[2]);ys.push(o[1]-o[2],o[1]+o[2]);});
+    xs.push(z.l[2]==='start'?z.l[0]:z.l[2]==='end'?z.l[0]-150:z.l[0]-60, z.l[2]==='start'?z.l[0]+150:z.l[2]==='end'?z.l[0]:z.l[0]+60); ys.push(z.l[1]-26,z.l[1]+8);
+    const hx=Math.min(...xs)-10,hy=Math.min(...ys)-10,hw=Math.max(...xs)-hx+10,hh=Math.max(...ys)-hy+10;
+    return `<g class="${c}" data-zone="${id}" role="button" aria-label="${zoneName(id)}"><rect class="hit" x="${hx}" y="${hy}" width="${hw}" height="${hh}"/>`+
+      (z.r||[]).map(r=>`<rect class="bld" x="${r[0]}" y="${r[1]}" width="${r[2]}" height="${r[3]}" rx="${r[4]||6}"/>`).join('')+
+      (z.o||[]).map(o=>`<circle class="bld" cx="${o[0]}" cy="${o[1]}" r="${o[2]}"/>`).join('')+
+      `<text class="${z.inside?'in':''}" x="${z.l[0]}" y="${z.l[1]}" text-anchor="${z.l[2]||'middle'}">${zoneName(id).replace(' i portiernia','').replace(' i ekspedycja','')}</text></g>`; };
+  const pv=(x,y,w,h,n)=>`<g class="pvg">${Array.from({length:n},(_,i)=>`<rect x="${x+i*(w/n)}" y="${y}" width="${w/n-5}" height="${h}" rx="2"/>`).join('')}</g>`;
+  const zs=sel||hint; const pc=zs&&MAPZ[zs]?MAPZ[zs].c:null;
+  const pin=pc?`<g transform="translate(${pc[0]},${pc[1]-44}) scale(.75)"><path class="pin" d="M0 0c-15 0-25 10-25 23 0 18 25 37 25 37s25-19 25-37c0-13-10-23-25-23z"/><circle cx="0" cy="23" r="8" fill="#fff"/></g>`:'';
+  return `<div class="mapwrap" id="mapwrap"><svg class="plant" viewBox="0 0 2080 730" width="980" role="group" aria-label="Mapa Cementowni Warta – stuknij budynek">
+    <rect width="2080" height="730" fill="#DDEBCE"/>
+    <path class="yard" d="M150 185L1190 185L1210 45L2030 35L2010 160L1900 350L1770 510L1590 630L1255 690L490 695L220 650L150 550L40 290Z"/>
+    <g class="road"><path d="M40 290Q90 200 150 185L1190 185L1210 45L2030 35"/><path d="M490 695L1255 690L1590 640"/><path d="M0 330L40 290"/></g>
+    <g class="rail"><path d="M0 560C300 600 700 618 1200 615S1700 560 1960 300"/><path class="ties" d="M0 560C300 600 700 618 1200 615S1700 560 1960 300"/></g>
+    <text class="ext" x="70" y="548">bocznica kolejowa</text>
+    ${pv(455,320,75,160,4)}${pv(795,210,95,80,5)}
+    <rect class="deco" x="490" y="215" width="65" height="75" rx="6"/><rect class="deco" x="1200" y="250" width="170" height="85" rx="6"/><rect class="deco" x="1470" y="428" width="80" height="40" rx="6"/>
+    <circle class="deco" cx="1290" cy="392" r="12"/><text class="ext" x="1268" y="400" text-anchor="end">komin</text>
+    <text class="ext" x="1050" y="545">Partner Serwis</text><text class="ext" x="420" y="665">CEMET</text><text class="ext" x="470" y="290" text-anchor="middle">PV</text><text class="ext" x="842" y="200" text-anchor="middle">PV</text>
+    ${Object.keys(MAPZ).map(zg).join('')}
+    <g class="mz kam ${sel==='kam'?'sel':''} ${hint==='kam'&&sel!=='kam'?'hint':''}" data-zone="kam" role="button" aria-label="Kamieniołom"><rect class="pill" x="1850" y="70" width="210" height="52" rx="26"/><text x="1955" y="104" text-anchor="middle">Kamieniołom ↗</text></g>
     ${pin}
-  </svg>`;
+  </svg></div><div class="maphint">↔ Przesuń mapę palcem · stuknij budynek</div>`;
 }
+function scrollMapTo(){ const w=document.getElementById('mapwrap'); const zs=S.zone||S.hint; if(!w) return;
+  const c = zs&&MAPZ[zs] ? MAPZ[zs].c[0] : (zs==='kam'?1955:1000); const px=c/2080*980; w.scrollLeft=Math.max(0,px-w.clientWidth/2); }
 
 /* Lokalizacja przybliżona: tylko w chwili zgłoszenia. Na pokazie (poza zakładem) podpowiada Sprężarkownię. */
 function locate(){
   vibrate();
-  const done = (txt)=>{ S.hint='spr'; S.zone='spr'; S.locTxt=txt; renderReport($('#view')); toast('Podpowiedź: Sprężarkownia. Zmień, jeśli trzeba.'); };
+  const done = (txt)=>{ S.hint='spr'; S.zone='spr'; renderReport._jump=true; S.locTxt=txt; renderReport($('#view')); toast('Podpowiedź: Sprężarkownia. Zmień, jeśli trzeba.'); };
   if(!navigator.geolocation){ return done('Podpowiedziano najbliższą strefę (tryb demo).'); }
   $('#locTxt').textContent='Szukam…';
   navigator.geolocation.getCurrentPosition(
