@@ -63,6 +63,17 @@ nav.tabs button.on{color:var(--navy);background:#EEF2F8}
 .thumb{width:64px;height:64px;border-radius:14px;object-fit:cover;flex:none;background:#EEF2F8}
 
 /* mapa stref */
+.plant{display:block;width:100%;height:auto;border-radius:14px;background:#F4F7FA;border:1px solid var(--line);touch-action:manipulation}
+.plant .mz{cursor:pointer}
+.plant .mz rect,.plant .mz circle.b{fill:#E6ECF3;stroke:#B9C4D2;stroke-width:1.2;transition:fill .2s,stroke .2s}
+.plant .mz text{fill:#44506A;font:700 9px 'Open Sans',system-ui,sans-serif;pointer-events:none}
+.plant .mz.sel rect,.plant .mz.sel circle.b{fill:var(--navy);stroke:var(--navy)}
+.plant .mz.sel text{fill:#fff}
+.plant .mz.hint rect,.plant .mz.hint circle.b{stroke:var(--green);stroke-width:2.4}
+.plant .tree{fill:#CDE6B0}
+.plant .mz rect.hit,.plant .mz.sel rect.hit{fill:transparent;stroke:none}
+.plant .pin{fill:var(--green);stroke:#fff;stroke-width:2}
+.zone-pick{margin-top:8px;font-size:15px;font-weight:700;color:var(--navy);min-height:22px}
 .map{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
 .zone{min-height:54px;border-radius:12px;background:#EEF2F8;border:2px solid #D3DBE6;font-size:13px;font-weight:700;color:#44506A;display:flex;align-items:center;justify-content:center;text-align:center;padding:4px 6px;line-height:1.15}
 .zone.w3{grid-column:span 3}
@@ -351,9 +362,8 @@ function renderReport(v){
 
   <section class="card">
     <div class="step ${S.zone?'done':''}"><i>${S.zone?'✓':'2'}</i>Gdzie? ${S.hint&&!S.zone?'<span class="tag good">podpowiedź</span>':''}</div>
-    <div class="map" role="group" aria-label="Strefy zakładu">
-      ${ZONES.map(z=>`<button class="zone ${z.w===2?'w2':z.w===3?'w3':''} ${S.zone===z.id?'sel':''} ${S.hint===z.id&&S.zone!==z.id?'hint':''}" data-zone="${z.id}">${z.name}</button>`).join('')}
-    </div>
+    ${plantMap()}
+    <div class="zone-pick">${S.zone?'📍 '+zoneName(S.zone):'Stuknij miejsce na mapie zakładu'}</div>
     <div class="loc"><button id="locBtn">📍 Moja lokalizacja</button><span id="locTxt">${S.locTxt||'Lokalizacja tylko w chwili zgłoszenia, bez śledzenia.'}</span></div>
   </section>
 
@@ -383,6 +393,33 @@ function renderReport(v){
   v.querySelectorAll('[data-size]').forEach(b=>b.onclick=()=>{ vibrate(); S.size=+b.dataset.size; renderReport(v); setTimeout(()=>{ const s=$('#sendBtn'); s&&s.scrollIntoView({behavior:'smooth',block:'center'}); },60); });
   $('#locBtn').onclick = locate;
   $('#sendBtn').onclick = send;
+}
+
+
+/* Schematyczna mapa Cementowni Warta (na podstawie zdjęcia satelitarnego: zakład wschód–zachód, bocznica od południa, las dookoła) */
+function plantMap(){
+  const z=(id,x,y,w,h,label,rx=5,fs)=>`<g class="mz ${S.zone===id?'sel':''} ${S.hint===id&&S.zone!==id?'hint':''}" data-zone="${id}" role="button" aria-label="${zoneName(id)}"><rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${rx}"/><text x="${x+w/2}" y="${y+h/2+3}" text-anchor="middle"${fs?` style="font-size:${fs}px"`:''}>${label}</text></g>`;
+  const trees=[[18,22,12],[40,14,10],[70,20,13],[104,12,10],[136,20,12],[168,12,10],[200,18,12],[236,10,9],[262,18,11],[344,62,12],[350,96,10],[346,190,13],[318,202,10],[200,204,11],[160,200,9],[112,206,12],[58,202,10],[16,186,12],[10,150,9],[12,62,10]];
+  const zs=S.zone||S.hint; const pins={wars:[66,118],mlsur:[148,60],silo:[208,60],spr:[142,102],piec:[216,102],piec2:[216,128],chl:[276,102],mlcem:[328,56],pak:[330,102],kam:[346,12]};
+  const pin=zs&&pins[zs]?`<g transform="translate(${pins[zs][0]},${pins[zs][1]-24})"><path class="pin" d="M0 0c-6 0-10 4-10 9 0 7 10 15 10 15s10-8 10-15c0-5-4-9-10-9z"/><circle cx="0" cy="9" r="3.2" fill="#fff"/></g>`:'';
+  return `<svg class="plant" viewBox="0 0 360 216" role="group" aria-label="Mapa zakładu – stuknij miejsce">
+    ${trees.map(t=>`<circle class="tree" cx="${t[0]}" cy="${t[1]}" r="${t[2]}"/>`).join('')}
+    <rect x="12" y="38" width="336" height="146" rx="22" fill="none" stroke="#DDE3EA" stroke-width="6"/>
+    <path d="M8 172 C120 176 240 176 352 158" fill="none" stroke="#AEB8C5" stroke-width="2"/>
+    <path d="M8 172 C120 176 240 176 352 158" fill="none" stroke="#AEB8C5" stroke-width="6" stroke-dasharray="1 5"/>
+    <g opacity=".75">${[0,1,2,3,4,5].map(i=>`<rect x="${22+i*8}" y="58" width="5" height="40" rx="1.5" fill="#C9D3DE"/>`).join('')}<text x="44" y="108" text-anchor="middle" style="font:700 8px 'Open Sans',sans-serif;fill:#8A96A6">PV</text></g>
+    ${z('wars',22,116,52,26,'Warsztat UR',5,8.5)}
+    ${z('mlsur',82,58,74,32,'Młyny surowca',5,8.5)}
+    <g class="mz ${S.zone==='silo'?'sel':''} ${S.hint==='silo'&&S.zone!=='silo'?'hint':''}" data-zone="silo" role="button" aria-label="Silosy"><rect class="hit" x="160" y="54" width="54" height="48"/><circle class="b" cx="175" cy="70" r="12"/><circle class="b" cx="200" cy="70" r="12"/><text x="187" y="96" text-anchor="middle">Silosy</text></g>
+    ${z('spr',82,100,68,30,'Sprężarkownia',5,8.5)}
+    ${z('piec',158,100,66,16,'Piec 1',8)}
+    ${z('piec2',158,126,66,16,'Piec 2',8)}
+    ${z('chl',232,100,52,42,'Chłodnik')}
+    ${z('mlcem',226,54,110,32,'Młyny cementu')}
+    ${z('pak',292,100,46,48,'Pakownia',5,8.5)}
+    ${z('kam',290,10,64,22,'Kamieniołom ↗',11,8.5)}
+    ${pin}
+  </svg>`;
 }
 
 /* Lokalizacja przybliżona: tylko w chwili zgłoszenia. Na pokazie (poza zakładem) podpowiada Sprężarkownię. */
