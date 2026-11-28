@@ -269,6 +269,20 @@ body{background:var(--deep);color:#fff;font:16px/1.4 'Open Sans',system-ui,-appl
 .mzoom{display:none}
 .map.zoomed .mzoom{display:flex}
 .mzoom span{width:34px;height:34px;font-size:22px}
+#postRun{justify-content:flex-start;padding-top:150px;gap:8px}
+.mobile #postRun{padding-top:110px}
+.runb{display:flex;align-items:center;gap:8px;background:#EFF7E6;color:var(--green-d);font-weight:800;font-size:14px;border-radius:20px;padding:6px 14px}
+.runb i{width:10px;height:10px;border-radius:50%;background:var(--green);animation:blink 1.2s ease-in-out infinite}
+@keyframes blink{50%{opacity:.25}}
+.cd{font-size:54px;font-weight:800;color:var(--navy);letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1.05;margin-top:6px}
+.cdbar{width:100%;height:10px;border-radius:6px;background:#E3E7EE;overflow:hidden;margin:6px 0 4px}
+.cdbar i{display:block;height:100%;width:100%;background:var(--green);transition:width 1s linear}
+.runnote{font-size:12.5px!important}
+.runlist{width:100%;display:flex;flex-direction:column;gap:4px;margin-top:2px;text-align:left}
+.runlist div{display:flex;justify-content:space-between;font-size:12.5px;font-weight:600;color:#344054;background:#fff;border-radius:10px;padding:7px 10px;box-shadow:0 0 0 1px var(--line)}
+.runlist em{font-style:normal;color:var(--muted);font-weight:700;font-variant-numeric:tabular-nums}
+#stopPost{width:100%;margin-top:10px;background:#C8372D;color:#fff}
+#gnav div#nX.run::after{content:"";position:absolute;top:4px;right:calc(50% - 18px);width:9px;height:9px;border-radius:50%;background:#C8372D;box-shadow:0 0 0 2px #fff}
 #camV{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none;background:#000}
 #l-cam.live #camV{display:block}
 #l-cam.live #camSvg{display:none}
@@ -452,10 +466,20 @@ body{overflow:hidden;touch-action:manipulation}
         <div class="hdr"><div><h3>Postój weekendowy</h3><p>48 h · Zmiana B · brygadzista Adam Nowak</p></div></div>
         <div class="list" id="rows"></div>
         <div class="sum"><small>Razem w czasie postoju</small><div class="v"><span id="sK">0</span> kWh · <span id="sZ">0</span> zł · <span id="sC">0,00</span> t CO₂</div><button class="btn" id="appr">Zatwierdź postój</button></div>
+        <div class="okov" id="postRun">
+          <div class="runb"><i></i>Postój trwa</div>
+          <div class="cd" id="cd">48:00:00</div>
+          <p>do końca postoju · <span id="cdEnd"></span></p>
+          <div class="cdbar"><i id="cdBar"></i></div>
+          <div class="big3"><div><b id="rK">0,00</b><span>kWh</span></div><div><b id="rZ">0,00</b><span>zł</span></div><div><b id="rC">0,00</b><span>kg CO₂</span></div></div>
+          <p class="runnote">zaoszczędzone do teraz · plan na cały postój: <b id="rPlan"></b></p>
+          <div class="runlist" id="runList"></div>
+          <button class="btn" id="stopPost">Wyłącz postój</button>
+        </div>
         <div class="okov" id="postOk">
           <svg class="ck" width="84" height="84" viewBox="0 0 92 92"><circle cx="46" cy="46" r="46"/><path d="M27 47l13 13 25-27"/></svg>
-          <h4>Postój zatwierdzony</h4>
-          <p>Oszczędność w czasie postoju</p>
+          <h4 id="poT">Postój zakończony</h4>
+          <p id="poS">Oszczędność w czasie postoju</p>
           <div class="big3"><div><b id="oK">0</b><span>kWh</span></div><div><b id="oZ">0</b><span>zł</span></div><div><b id="oC">0,00</b><span>t CO₂</span></div></div>
           <div class="cmp" id="cmpPlane"><svg width="30" height="30" viewBox="0 0 30 30"><path d="M27 13.5 18 12 12 3H9.5l3 9H6.5L4 9H2l1.5 6L2 21h2l2.5-3h6l-3 9H12l6-9 9-1.5z" fill="#82C63F"/></svg><span id="planeT">Jak ok. 4 loty Warszawa–Londyn w obie strony</span></div>
           <button class="btn" id="postClose" style="margin-top:14px;background:var(--navy);color:#fff;width:100%">Gotowe</button>
@@ -671,7 +695,7 @@ function renderRank(){ const people=BASE.people.map(p=>p.slice()); const me=peop
 
 /* ---------- ekrany ---------- */
 const LAYERS=['#l-home','#l-cam','#l-form','#l-wait','#l-app','#l-rank','#l-post'];
-function show(id,light){ if(id!=='#l-cam') stopCam(); if(id!=='#l-form') off('#formOk'); if(id!=='#l-post'){ off('#postOk'); off('#cmpPlane'); } LAYERS.forEach(l=>{ const el=$(l); el.classList.remove('gone'); if(l!==id) el.classList.remove('on'); }); on(id); lt(!!light); }
+function show(id,light){ if(id!=='#l-cam') stopCam(); if(id!=='#l-form') off('#formOk'); if(id!=='#l-post'){ off('#postOk'); off('#cmpPlane'); off('#postRun'); } LAYERS.forEach(l=>{ const el=$(l); el.classList.remove('gone'); if(l!==id) el.classList.remove('on'); }); on(id); lt(!!light); }
 function goCam(){ $('#focus').classList.remove('ok'); show('#l-cam'); $('#camSvg').innerHTML=''; navTo(0); on('#gnav'); startCam(); }
 function goForm(){ $('#l-form').scrollTop=0; R={zoom:false,pin:false,cat:null,size:null,sent:false,zone:null}; setThumb(); stage.querySelectorAll('.det').forEach(d=>d.classList.remove('on'));
   $('#mapSvg').classList.remove('z'); $('#pin').setAttribute('opacity','0'); $('#pin').getAnimations().forEach(a=>a.cancel());
@@ -689,7 +713,30 @@ function goImpact(){ off('#push'); show('#l-app'); navTo(1); on('#cImpact'); on(
   else if(!R.sent && !goImpact.done){ $('#vK').textContent='0'; $('#vZ').textContent='0'; $('#vC').textContent='0,00'; $('#cmpHouse').lastChild.textContent=' Zgłoś pierwszą stratę, a tu zobaczysz jej efekt'; on('#cmpHouse'); } }
 function plM(n){ if(n<=1) return 'miesiąc'; if(n%10>=2&&n%10<=4&&(n%100<10||n%100>=20)) return 'miesiące'; return 'miesięcy'; }
 function goRank(){ show('#l-rank'); navTo(2); seg(+$('#seg').dataset.v||0); if(!goRank.done){ goRank.done=true; tween('#fZ',0,BASE.fZ+EARN.zl,t+.2,1.2,0); tween('#fK',0,BASE.fK+EARN.kwh,t+.2,1.2,0); tween('#fC',0,BASE.fC+EARN.co2,t+.2,1.2,1); setTimeout(()=>on('#cmpFirm'),900);} }
-function goPost(){ show('#l-post'); navTo(3); }
+function goPost(){ show('#l-post'); navTo(3); if(PS.on){ on('#postRun'); tickPost(); } }
+/* ---------- trwający postój: odliczanie i oszczędność na żywo ---------- */
+const PS={on:false,start:0,dev:[],durH:0,timer:null};
+const hms=sec=>{ sec=Math.max(0,Math.round(sec)); const h=Math.floor(sec/3600),m=Math.floor(sec%3600/60),x=sec%60; return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(x).padStart(2,'0')}`; };
+function accrued(elH){ return PS.dev.reduce((a,d)=>a+d.kw*Math.min(elH,d.h),0); }
+function startPost(){ PS.dev=ROWS.map((r,i)=>({name:r[0],kw:r[2],h:hours[i],on:checked[i]})).filter(d=>d.on);
+  PS.durH=Math.max(...PS.dev.map(d=>d.h)); PS.start=Date.now(); PS.on=true;
+  const plan=PS.dev.reduce((a,d)=>a+d.kw*d.h,0);
+  $('#rPlan').textContent=`${fmt(plan,0)} kWh · ${fmt(plan*.8,0)} zł`;
+  const end=new Date(PS.start+PS.durH*3600e3); $('#cdEnd').textContent='koniec '+end.toLocaleString('pl-PL',{weekday:'short',hour:'2-digit',minute:'2-digit'});
+  $('#runList').innerHTML=PS.dev.map((d,i)=>`<div><span>${d.name}</span><em id="rl${i}">wył. · ${d.h} h</em></div>`).join('');
+  stage.querySelectorAll('#rows .row').forEach(r=>r.style.pointerEvents='none'); $('#appr').classList.remove('ready');
+  $('#nX').classList.add('run'); on('#postRun'); chime(); tickPost(); clearInterval(PS.timer); PS.timer=setInterval(tickPost,1000); }
+function tickPost(){ if(!PS.on) return; const el=(Date.now()-PS.start)/1000, elH=el/3600, rem=PS.durH*3600-el;
+  $('#cd').textContent=hms(rem); $('#cdBar').style.width=Math.max(0,rem/(PS.durH*3600)*100)+'%';
+  const k=accrued(elH); $('#rK').textContent=fmt(k,k<100?2:1); $('#rZ').textContent=fmt(k*.8,2); $('#rC').textContent=fmt(k*.6,2);
+  PS.dev.forEach((d,i)=>{ const e=$('#rl'+i); if(e) e.textContent= elH>=d.h?'włączone ponownie':`wył. · jeszcze ${hms(d.h*3600-el)}`; });
+  if(rem<=0) stopPost(true); }
+function stopPost(auto){ if(!PS.on) return; clearInterval(PS.timer); PS.on=false; const elH=(Date.now()-PS.start)/3600e3, k=accrued(Math.min(elH,PS.durH));
+  const plan=PS.dev.reduce((a,d)=>a+d.kw*d.h,0);
+  off('#postRun'); $('#nX').classList.remove('run'); stage.querySelectorAll('#rows .row').forEach(r=>r.style.pointerEvents=''); $('#appr').classList.toggle('ready',checked.some(Boolean));
+  $('#poT').textContent=auto?'Postój zakończony':'Postój wyłączony'; $('#poS').textContent=`Oszczędność w czasie postoju (${hms(Math.min(elH,PS.durH)*3600)})`;
+  on('#postOk'); chime(); tween('#oK',0,k,t+.2,1.2,k<10?1:0); tween('#oZ',0,k*.8,t+.2,1.2,k<10?2:0); const smallC=k*.0006<0.1; $('#oC').nextElementSibling.textContent=smallC?'kg CO₂':'t CO₂'; tween('#oC',0,smallC?k*.6:k*.0006,t+.2,1.2,2);
+  $('#planeT').textContent=`Pełny postój (${fmt(plan,0)} kWh) to jak ok. ${Math.max(1,Math.round(plan*.0006/0.42))} lotów Warszawa–Londyn w obie strony (szacunek)`; setTimeout(()=>on('#cmpPlane'),1400); }
 
 /* ---------- interakcje ---------- */
 function bind(){
@@ -712,12 +759,11 @@ function bind(){
   ['#sgO','#sgZ','#sgF'].forEach((s,i)=>$(s).addEventListener('click',()=>{ seg(i); beep(660,.06,'sine',.04); }));
   NAV.forEach((n,i)=>$('#'+n[0]).addEventListener('click',()=>{ ensureAudio(); [()=>{ if($('#l-form').classList.contains('on')||$('#l-cam').classList.contains('on')) return; goCam(); },goImpact,goRank,goPost][i](); }));
   ROWS.forEach((r,i)=>{ const row=$('#r'+i);
-    row.querySelector('.pl').addEventListener('click',e=>{ e.stopPropagation(); if(hours[i]>=72) return; step(i,4); recalc(); });
-    row.querySelector('.mi').addEventListener('click',e=>{ e.stopPropagation(); if(hours[i]<=4) return; step(i,-4); recalc(); });
-    row.addEventListener('click',()=>{ checked[i]=!checked[i]; row.classList.toggle('ck',checked[i]); tap('#r'+i+' .cb'); recalc(); beep(880,.07,'sine',.05); }); });
-  $('#appr').addEventListener('click',()=>{ if(!checked.some(Boolean)) return; tap('#appr'); on('#postOk'); chime();
-    tween('#oK',0,sums[0],t+.2,1.2,0); tween('#oZ',0,sums[1],t+.2,1.2,0); tween('#oC',0,sums[2],t+.2,1.2,2);
-    $('#planeT').textContent=`Jak ok. ${Math.max(1,Math.round(sums[2]/0.42))} lotów Warszawa–Londyn w obie strony (szacunek)`; setTimeout(()=>on('#cmpPlane'),1400); });
+    row.querySelector('.pl').addEventListener('click',e=>{ e.stopPropagation(); if(PS.on||hours[i]>=72) return; step(i,4); recalc(); });
+    row.querySelector('.mi').addEventListener('click',e=>{ e.stopPropagation(); if(PS.on||hours[i]<=4) return; step(i,-4); recalc(); });
+    row.addEventListener('click',()=>{ if(PS.on) return; checked[i]=!checked[i]; row.classList.toggle('ck',checked[i]); tap('#r'+i+' .cb'); recalc(); beep(880,.07,'sine',.05); }); });
+  $('#appr').addEventListener('click',()=>{ if(!checked.some(Boolean)||PS.on) return; tap('#appr'); startPost(); });
+  $('#stopPost').addEventListener('click',()=>{ tap('#stopPost'); stopPost(false); });
   $('#postClose').addEventListener('click',()=>{ off('#postOk'); off('#cmpPlane'); });
 }
 function recalc(){ let k=0; ROWS.forEach((r,i)=>{ const g=gainOf(i); const row=$('#r'+i); row.querySelector('.gain').textContent=`+${fmt(g,0)} kWh · ${fmt(g*.8,0)} zł · ${fmt(g*.0006,2)} t CO₂`; if(checked[i]) k+=g; });
