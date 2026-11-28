@@ -350,7 +350,7 @@ body{overflow:hidden;touch-action:manipulation}
         <div class="fb">
           <div class="who">
             <div class="ph"><svg id="thumbSvg" viewBox="101 340 180 180"></svg><img id="thumbImg" alt="Twoje zdjęcie" hidden><span class="phok"><svg width="13" height="13" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7" fill="none" stroke="#04243E" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span></div>
-            <div><div class="lab">Zgłaszający</div><div class="ro"><span>Jan Kowalski · Wydział Młyny</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#98A2B3" stroke-width="2.4" style="flex:none"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></div><div class="okt">✓ Zdjęcie dodane</div></div>
+            <div><div class="lab">Zgłaszający</div><div class="ro"><span>Jan Kowalski · Wydział B</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#98A2B3" stroke-width="2.4" style="flex:none"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></div><div class="okt">✓ Zdjęcie dodane</div></div>
           </div>
           <div>
             <div class="lrow"><span class="lab">Dokładne miejsce</span><span class="hint" id="hint">Stuknij budynek, aby przybliżyć</span></div>
@@ -422,7 +422,7 @@ body{overflow:hidden;touch-action:manipulation}
 
       <!-- your impact -->
       <div class="layer" id="l-app">
-        <div class="hdr"><div><h3>Cześć, Jan!</h3><p>Wydział Młyny · Twój wpływ</p></div><span class="pill avatar">JK</span></div>
+        <div class="hdr"><div><h3>Cześć, Jan!</h3><p>Wydział B · Twój wpływ</p></div><span class="pill avatar">JK</span></div>
         <div class="ac"><div id="acIn">
           <div class="card" id="cImpact">
             <div class="ct">Twój wpływ · pierwsze 7 dni po naprawie</div>
@@ -463,7 +463,7 @@ body{overflow:hidden;touch-action:manipulation}
 
       <!-- shutdowns before the weekend standstill -->
       <div class="layer slide" id="l-post">
-        <div class="hdr"><div><h3>Postój weekendowy</h3><p>48 h · Wydział Młyny · brygadzista Adam Nowak</p></div></div>
+        <div class="hdr"><div><h3>Postój weekendowy</h3><p>48 h · Wydział B · brygadzista Adam Nowak</p></div></div>
         <div class="list" id="rows"></div>
         <div class="sum"><small>Razem w czasie postoju</small><div class="v"><span id="sK">0</span> kWh · <span id="sZ">0</span> zł · <span id="sC">0,00</span> t CO₂</div><button class="btn" id="appr">Zatwierdź postój</button></div>
         <div class="okov" id="postRun">
@@ -497,7 +497,7 @@ body{overflow:hidden;touch-action:manipulation}
 const stage=document.getElementById('stage');
 let t=0, actx=null, muted=false, tweens=[], S=1, sums=[0,0,0], hours=[48,48,48,48], checked=[false,false,false,false];
 const now=()=>performance.now()/1000;
-const DN={A:'Piece',B:'Młyny',C:'Pakownia'}; /* wydziały zamiast zmian */
+const DN={A:'Wydział A',B:'Wydział B',C:'Wydział C'}; /* wydziały zamiast zmian */
 const $=s=>stage.querySelector(s);
 const fmt=(n,d)=>{const s=n.toFixed(d).split('.');const i=s[0].replace(/\B(?=(\d{3})+(?!\d))/g,' ');return s[1]?i+','+s[1]:i};
 const mmss=x=>{x=Math.max(0,Math.floor(x));return Math.floor(x/60)+':'+String(x%60).padStart(2,'0')};
@@ -578,7 +578,7 @@ function renderDynamic(){
   $('#gnav').insertAdjacentHTML('beforeend',NAV.map((n,i)=>`<div id="${n[0]}" class="${i?'':'a'}"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">${n[2]}</svg>${n[1]}</div>`).join(''));
   $('#rows').innerHTML=ROWS.map((r,i)=>`<div class="row" id="r${i}"><span class="cb"><svg width="16" height="16" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7" fill="none" stroke="#04243E" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div class="rn">${r[0]}</div><div class="stp"><span class="mi">−</span><b id="h${i}">${hours[i]} h</b><span class="pl">+</span></div><div class="rs">${r[1]}</div><span class="gain"></span></div>`).join('');
   $('#pO').innerHTML=PEOPLE.map((p,i)=>{const s=SH.find(x=>x[0]===p[1]);const ini=p[0].split(' ').map(w=>w[0]).join('');const rc=['#C9971C','#8A97A8','#B5703A'][i]||'#98A2B3';
-    return `<div class="pr${p[3]?' me':''}" style="transition-delay:${i*90}ms"><b class="rk" style="color:${rc}">${i+1}</b><span class="av" style="background:${s[1]}">${ini}</span><div class="pn"><b>${p[0]}${p[3]?'<em>Ty</em>':''}</b><span>Wydział ${DN[p[1]]}</span></div><div class="pz"><b>${fmt(p[2],0)} zł</b><span>${fmt(p[2]*.00075,2)} t CO₂</span></div></div>`}).join('');
+    return `<div class="pr${p[3]?' me':''}" style="transition-delay:${i*90}ms"><b class="rk" style="color:${rc}">${i+1}</b><span class="av" style="background:${s[1]}">${ini}</span><div class="pn"><b>${p[0]}${p[3]?'<em>Ty</em>':''}</b><span>${DN[p[1]]}</span></div><div class="pz"><b>${fmt(p[2],0)} zł</b><span>${fmt(p[2]*.00075,2)} t CO₂</span></div></div>`}).join('');
   $('#bars').innerHTML=SH.map((s,i)=>`<div class="bc">${s[0]==='B'?'<span class="tag">Twój wydział</span>':''}<b class="amt" style="color:${s[2]}">${fmt(s[3],0)} zł</b>${pig(s[1],s[2])}<span class="bar" style="--h:${Math.round(s[3]/2310*170)}px;background:${s[1]}"></span><span class="bn">${DN[s[0]]}</span><span class="bs">${i+1}. miejsce</span></div>`).join('');
   $('#share').innerHTML=SH.map(s=>`<span style="--w:${s[4]}%;background:${s[1]}"></span>`).join('');
   $('#leg').innerHTML=SH.map(s=>`<span><i style="background:${s[1]}"></i>${DN[s[0]]} · ${s[4]}%</span>`).join('');
@@ -687,7 +687,7 @@ function renderRank(){ const people=BASE.people.map(p=>p.slice()); const me=peop
   SH.forEach(x=>x[4]=Math.round(x[3]/tot*100)); SH.sort((a,b)=>b[3]-a[3]);
   const mx=SH[0][3];
   $('#pO').innerHTML=PEOPLE.map((p,i)=>{const s=SH.find(x=>x[0]===p[1]);const ini=p[0].split(' ').map(w=>w[0]).join('');const rc=['#C9971C','#8A97A8','#B5703A'][i]||'#98A2B3';
-    return `<div class="pr${p[3]?' me':''}" style="transition-delay:${i*90}ms"><b class="rk" style="color:${rc}">${i+1}</b><span class="av" style="background:${s[1]}">${ini}</span><div class="pn"><b>${p[0]}${p[3]?'<em>Ty</em>':''}</b><span>Wydział ${DN[p[1]]}</span></div><div class="pz"><b>${fmt(p[2],0)} zł</b><span>${fmt(p[2]*.00075,2)} t CO₂</span></div></div>`}).join('');
+    return `<div class="pr${p[3]?' me':''}" style="transition-delay:${i*90}ms"><b class="rk" style="color:${rc}">${i+1}</b><span class="av" style="background:${s[1]}">${ini}</span><div class="pn"><b>${p[0]}${p[3]?'<em>Ty</em>':''}</b><span>${DN[p[1]]}</span></div><div class="pz"><b>${fmt(p[2],0)} zł</b><span>${fmt(p[2]*.00075,2)} t CO₂</span></div></div>`}).join('');
   $('#bars').innerHTML=SH.map((s,i)=>`<div class="bc">${s[0]==='B'?'<span class="tag">Twój wydział</span>':''}<b class="amt" style="color:${s[2]}">${fmt(s[3],0)} zł</b>${pig(s[1],s[2])}<span class="bar" style="--h:${Math.round(s[3]/mx*170)}px;background:${s[1]}"></span><span class="bn">${DN[s[0]]}</span><span class="bs">${i+1}. miejsce</span></div>`).join('');
   $('#share').innerHTML=SH.map(s=>`<span style="--w:${s[4]}%;background:${s[1]}"></span>`).join('');
   $('#leg').innerHTML=SH.map(s=>`<span><i style="background:${s[1]}"></i>${DN[s[0]]} · ${s[4]}%</span>`).join('');
